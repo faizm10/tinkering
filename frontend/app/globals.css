@@ -127,3 +127,92 @@
     @apply font-sans;
     }
 }
+
+/* Spaced dash rules (short segments, wide gaps — not browser border-dotted) */
+@layer utilities {
+  .hero-divider-spaced-dots {
+    --dash-line: var(--foreground);
+    --dash-len: 10px;
+    --dash-gap: 26px;
+    --dash-period: calc(var(--dash-len) + var(--dash-gap));
+    --dash-thickness: 2px;
+
+    flex-shrink: 0;
+    height: var(--dash-thickness);
+    width: 100%;
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--dash-line) 0 var(--dash-len),
+      transparent var(--dash-len) var(--dash-period)
+    );
+    background-size: var(--dash-period) var(--dash-thickness);
+    background-position: top left;
+    background-repeat: repeat-x;
+  }
+
+  @media (min-width: 768px) {
+    .hero-divider-spaced-dots {
+      height: 100%;
+      width: var(--dash-thickness);
+      min-height: 0;
+      align-self: stretch;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        var(--dash-line) 0 var(--dash-len),
+        transparent var(--dash-len) var(--dash-period)
+      );
+      background-size: var(--dash-thickness) var(--dash-period);
+      background-position: top left;
+      background-repeat: repeat-y;
+    }
+  }
+
+  .frame-spaced-dots {
+    position: relative;
+    border: none;
+  }
+
+  .frame-spaced-dots::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    --dash-line: var(--foreground);
+    --dash-len: 10px;
+    --dash-gap: 26px;
+    --dash-period: calc(var(--dash-len) + var(--dash-gap));
+    --dash-thickness: 2px;
+
+    background:
+      repeating-linear-gradient(
+          to right,
+          var(--dash-line) 0 var(--dash-len),
+          transparent var(--dash-len) var(--dash-period)
+        )
+        top left / var(--dash-period) var(--dash-thickness) repeat-x,
+      repeating-linear-gradient(
+          to right,
+          var(--dash-line) 0 var(--dash-len),
+          transparent var(--dash-len) var(--dash-period)
+        )
+        bottom left / var(--dash-period) var(--dash-thickness) repeat-x,
+      repeating-linear-gradient(
+          to bottom,
+          var(--dash-line) 0 var(--dash-len),
+          transparent var(--dash-len) var(--dash-period)
+        )
+        top left / var(--dash-thickness) var(--dash-period) repeat-y,
+      repeating-linear-gradient(
+          to bottom,
+          var(--dash-line) 0 var(--dash-len),
+          transparent var(--dash-len) var(--dash-period)
+        )
+        top right / var(--dash-thickness) var(--dash-period) repeat-y;
+  }
+
+  .frame-spaced-dots > * {
+    position: relative;
+    z-index: 1;
+  }
+}
