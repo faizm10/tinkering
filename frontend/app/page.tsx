@@ -21,7 +21,7 @@ export default function Page() {
         <span className="font-mono text-[0.6rem] tracking-[0.3em] text-neutral-400 uppercase select-none">
           faiz mustansar | 2026
         </span>
-        <span className="text-sm tracking-wide text-neutral-500">
+        <span className="font-cursive  tracking-wide text-neutral-500">
           currently tinkering something new
         </span>
       </div>
