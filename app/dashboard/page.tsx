@@ -1,17 +1,12 @@
-import { FlightAirport } from "@/components/ui/flight"
-import { Map } from "@/components/ui/map"
-import React from "react"
+import { Map, MapControls } from "@/components/ui/map";
+import { Card } from "@/components/ui/card";
 
-const AdminDashboard = () => {
-  return
-
-  ;<>
-    <Map center={[128, 29]} zoom={2.35}>
-      <FlightAirport code="TPE" showLabel={true} labelPosition="top" />
-      <FlightAirport code="HND" showLabel={true} labelPosition="top" />
-      <FlightAirport code="ICN" showLabel={true} labelPosition="top" />
-    </Map>
-  </>
+export function MyMap() {
+  return (
+    <Card className="h-[320px] p-0 overflow-hidden">
+      <Map center={[-74.006, 40.7128]} zoom={11}>
+        <MapControls />
+      </Map>
+    </Card>
+  );
 }
-
-export default AdminDashboard
