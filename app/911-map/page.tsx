@@ -791,8 +791,8 @@ export default function Page() {
           : "Live feed offline"
 
   return (
-    <main className="dark relative min-h-[100dvh] overflow-hidden font-mono text-[#f5f2ea]">
-      <div className="absolute inset-0">
+    <main className="dark relative min-h-[100dvh] overflow-x-hidden overflow-y-hidden font-mono text-[#f5f2ea]">
+      <div className="absolute inset-0 touch-pan-x touch-pan-y">
         <Map
           theme="light"
           styles={{
@@ -814,7 +814,7 @@ export default function Page() {
             showCompass
             showLocate
             showFullscreen
-            className="right-4 bottom-5 xl:right-[356px] 2xl:right-[376px]"
+            className="right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1.25rem,env(safe-area-inset-bottom))] xl:right-[calc(356px+env(safe-area-inset-right))] 2xl:right-[calc(376px+env(safe-area-inset-right))]"
           />
 
           {mapIncidents.map((incident) => {
@@ -843,7 +843,7 @@ export default function Page() {
                 <MarkerTooltip className="border border-white/10 bg-[#111313] text-[#f5f2ea]">
                   {incident.description}
                 </MarkerTooltip>
-                <MarkerPopup className="w-[260px] border border-white/12 bg-[#101212]/95 p-0 text-[#f5f2ea] shadow-2xl backdrop-blur-md">
+                <MarkerPopup className="w-[min(260px,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] border border-white/12 bg-[#101212]/95 p-0 text-[#f5f2ea] shadow-2xl backdrop-blur-md">
                   <div className="border-b border-white/10 px-4 py-3">
                     <div className="flex items-center justify-between gap-3">
                       <span
@@ -879,25 +879,25 @@ export default function Page() {
       </div>
 
       {/* Targeted gradients to protect content legibility over light map */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-[72%] bg-[linear-gradient(90deg,rgba(5,7,7,0.60)_0%,rgba(5,7,7,0.28)_55%,transparent_88%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,rgba(5,7,7,0.52),transparent)]" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-[min(100%,22rem)] bg-[linear-gradient(90deg,rgba(5,7,7,0.66)_0%,rgba(5,7,7,0.32)_70%,transparent_100%)] sm:w-[56%] md:w-[64%] lg:w-[72%] sm:bg-[linear-gradient(90deg,rgba(5,7,7,0.60)_0%,rgba(5,7,7,0.28)_55%,transparent_88%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(5,7,7,0.52),transparent)] sm:h-40" />
 
       {newAlert && <NewAlertToast alert={newAlert} />}
 
-      <section className="pointer-events-none relative z-10 flex min-h-[100dvh] flex-col justify-between p-4 sm:p-6 lg:p-8 xl:pr-[380px] 2xl:pr-[400px]">
+      <section className="pointer-events-none relative z-10 flex min-h-[100dvh] flex-col justify-start gap-5 p-[max(1rem,env(safe-area-inset-top))_max(1rem,env(safe-area-inset-right))_max(1rem,env(safe-area-inset-bottom))_max(1rem,env(safe-area-inset-left))] sm:gap-6 sm:p-6 lg:p-8 lg:justify-between xl:pr-[380px] 2xl:pr-[400px]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="pointer-events-auto max-w-2xl">
-            <div className="mb-5 flex items-start gap-4">
-              <span className="relative grid size-12 place-items-center rounded-md border border-[#28d0b8]/30 bg-[#071312]/92 shadow-[0_0_34px_rgba(40,208,184,0.16)] backdrop-blur">
+            <div className="mb-4 flex items-start gap-3 sm:mb-5 sm:gap-4">
+              <span className="relative grid size-10 shrink-0 place-items-center rounded-md border border-[#28d0b8]/30 bg-[#071312]/92 shadow-[0_0_34px_rgba(40,208,184,0.16)] backdrop-blur sm:size-12">
                 <span className="absolute inset-0 animate-[ping_2.8s_ease-out_infinite] rounded-md bg-[#28d0b8]/10" />
                 <span className="absolute inset-1 rounded-sm border border-[#28d0b8]/10" />
-                <Radio className="size-5 text-[#28d0b8]" />
+                <Radio className="size-[1.15rem] text-[#28d0b8] sm:size-5" />
               </span>
-              <div>
-                <p className="text-[11px] text-[#7ad9cd]/70 uppercase">
+              <div className="min-w-0">
+                <p className="text-[10px] text-[#7ad9cd]/70 uppercase sm:text-[11px]">
                   Toronto dispatch surface
                 </p>
-                <h1 className="mt-1 text-5xl leading-none font-black text-pretty text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-7xl">
+                <h1 className="mt-0.5 text-3xl leading-[0.95] font-black tracking-tight text-pretty text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:mt-1 sm:text-5xl sm:leading-none lg:text-7xl">
                   911 Map
                 </h1>
               </div>
@@ -951,7 +951,7 @@ export default function Page() {
             </p>
           </div>
 
-          <div className="pointer-events-auto grid w-full max-w-[340px] grid-cols-3 overflow-hidden rounded-md border border-[#7ad9cd]/16 bg-[#080c0c]/92 text-center shadow-[0_24px_80px_rgba(0,0,0,0.42)] backdrop-blur-md xl:hidden">
+          <div className="pointer-events-auto grid w-full min-w-0 max-w-[340px] grid-cols-3 overflow-hidden rounded-md border border-[#7ad9cd]/16 bg-[#080c0c]/92 text-center shadow-[0_24px_80px_rgba(0,0,0,0.42)] backdrop-blur-md xl:hidden">
             <Metric
               label="Police"
               value={totals.police}
@@ -966,7 +966,14 @@ export default function Page() {
           </div>
         </div>
 
-        <div className="pointer-events-none flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="pointer-events-auto w-full max-w-2xl xl:hidden">
+          <LiveFeedPanel
+            incidents={liveFilteredIncidents}
+            liveStatus={liveStatus}
+          />
+        </div>
+
+        <div className="pointer-events-none mt-auto flex min-h-0 w-full flex-col gap-4 lg:mt-0 lg:flex-1 lg:flex-row lg:items-end lg:justify-between">
           <div className="pointer-events-auto w-full max-w-2xl rounded-md border border-[#7ad9cd]/16 bg-[#070b0b]/94 p-3 shadow-[0_28px_90px_rgba(0,0,0,0.46)] backdrop-blur-md">
             <div className="flex flex-wrap items-center gap-2">
               <ControlLabel
@@ -979,7 +986,7 @@ export default function Page() {
                   type="button"
                   onClick={() => setSelectedWindow(window)}
                   className={cn(
-                    "h-9 rounded-md border px-3 font-mono text-xs transition",
+                    "min-h-11 rounded-md border px-3.5 py-2 font-mono text-xs transition touch-manipulation sm:h-9 sm:min-h-0 sm:px-3 sm:py-0",
                     selectedWindow === window
                       ? "border-[#28d0b8] bg-[#28d0b8] text-[#06110f] shadow-[0_0_24px_rgba(40,208,184,0.22)]"
                       : "border-[#7ad9cd]/14 bg-[#0d1413] text-white/62 hover:border-[#7ad9cd]/38 hover:text-white"
@@ -999,7 +1006,7 @@ export default function Page() {
                 type="button"
                 onClick={() => setShowHotZones((value) => !value)}
                 className={cn(
-                  "h-9 rounded-md border px-3 font-mono text-xs transition",
+                  "min-h-11 rounded-md border px-3.5 py-2 font-mono text-xs transition touch-manipulation sm:h-9 sm:min-h-0 sm:px-3 sm:py-0",
                   showHotZones
                     ? "border-[#ffb23f] bg-[#ffb23f] text-[#191006] shadow-[0_0_24px_rgba(255,178,63,0.2)]"
                     : "border-[#7ad9cd]/14 bg-[#0d1413] text-white/62 hover:border-[#7ad9cd]/38 hover:text-white"
@@ -1014,7 +1021,7 @@ export default function Page() {
                   type="button"
                   onClick={() => setSelectedType(option)}
                   className={cn(
-                    "h-9 rounded-md border px-3 font-mono text-xs capitalize transition",
+                    "min-h-11 rounded-md border px-3.5 py-2 font-mono text-xs capitalize transition touch-manipulation sm:h-9 sm:min-h-0 sm:px-3 sm:py-0",
                     selectedType === option
                       ? "border-[#f4efe6] bg-[#f4efe6] text-[#101212]"
                       : "border-[#7ad9cd]/14 bg-[#0d1413] text-white/62 hover:border-[#7ad9cd]/38 hover:text-white"
@@ -1036,7 +1043,7 @@ export default function Page() {
         </div>
       </section>
 
-      <aside className="pointer-events-auto absolute top-4 right-4 bottom-4 z-20 hidden w-[320px] flex-col gap-3 xl:flex 2xl:w-[340px]">
+      <aside className="pointer-events-auto absolute top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1rem,env(safe-area-inset-bottom))] z-20 hidden w-[320px] flex-col gap-3 xl:flex 2xl:w-[340px]">
         <div className="grid grid-cols-3 overflow-hidden rounded-md border border-[#7ad9cd]/16 bg-[#080c0c]/92 text-center shadow-[0_24px_80px_rgba(0,0,0,0.42)] backdrop-blur-md">
           <Metric label="Police" value={totals.police} tone="text-[#ff6477]" />
           <Metric label="Fire" value={totals.fire} tone="text-[#ffbf5c]" />
@@ -1082,7 +1089,7 @@ function NewAlertToast({ alert }: { alert: NewAlertBanner }) {
     alert.count === 1 ? "1 new alert" : `${alert.count} new alerts`
 
   return (
-    <div className="pointer-events-none absolute top-3 right-4 left-4 z-30 flex justify-center xl:right-[380px] 2xl:right-[400px]">
+    <div className="pointer-events-none absolute top-[max(0.75rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] left-[max(1rem,env(safe-area-inset-left))] z-30 flex justify-center xl:right-[calc(380px+env(safe-area-inset-right))] 2xl:right-[calc(400px+env(safe-area-inset-right))]">
       <div className="flex w-full max-w-[560px] animate-in items-center gap-3 rounded-md border border-[#ffb23f]/42 bg-[#080c0c]/96 px-3 py-2.5 text-[#f4efe6] shadow-[0_20px_80px_rgba(0,0,0,0.55),0_0_38px_rgba(255,178,63,0.16)] backdrop-blur-md duration-300 fade-in-0 slide-in-from-top-2">
         <span
           className={cn(
@@ -1121,7 +1128,7 @@ function LiveFeedPanel({
   liveStatus: LiveStatus
 }) {
   return (
-    <section className="max-h-[28vh] overflow-hidden rounded-md border border-[#7ad9cd]/16 bg-[#070b0b]/94 shadow-[0_28px_90px_rgba(0,0,0,0.48)] backdrop-blur-md">
+    <section className="max-h-[min(34vh,18rem)] overflow-hidden rounded-md border border-[#7ad9cd]/16 bg-[#070b0b]/94 shadow-[0_28px_90px_rgba(0,0,0,0.48)] backdrop-blur-md sm:max-h-[28vh]">
       <div className="flex items-center justify-between border-b border-[#7ad9cd]/14 px-3 py-2.5">
         <p className="font-mono text-[10px] text-white/65 uppercase">
           Live feed
@@ -1130,7 +1137,7 @@ function LiveFeedPanel({
           {incidents.length} calls
         </p>
       </div>
-      <div className="max-h-[22vh] overflow-auto">
+      <div className="max-h-[min(28vh,15rem)] overflow-y-auto overscroll-y-contain sm:max-h-[22vh]">
         {incidents.slice(0, 4).map((incident) => {
           const style = typeStyles[incident.type]
           const Icon = style.Icon
@@ -1303,7 +1310,7 @@ function ControlLabel({
   label: string
 }) {
   return (
-    <span className="mr-1 flex h-9 items-center gap-2 px-1 font-mono text-[11px] text-white/48 uppercase">
+    <span className="mr-1 flex min-h-11 items-center gap-2 px-1 font-mono text-[11px] text-white/48 uppercase sm:h-9 sm:min-h-0">
       {icon}
       {label}
     </span>
