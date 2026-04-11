@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import {
+  approximateFeedCoordinates,
   classifyTfsIncidentType,
-  coordsForPolice,
-  coordsForTfsCity,
 } from "@/lib/gta-approximate-geo"
 
 type IncidentType = "police" | "fire" | "medical"
@@ -138,7 +137,13 @@ function normalizeFireEvent(
     cityCode,
     dateStr: event.date_str ?? "",
     keyword: null,
-    coordinates: coordsForTfsCity(event.city_code, id),
+    coordinates: approximateFeedCoordinates(
+      id,
+      "TFS",
+      event.location ?? "",
+      event.city_code,
+      event.division,
+    ),
     sourceLastIngest,
   }
 }
@@ -171,7 +176,13 @@ function normalizePoliceEvent(
     cityCode: "",
     dateStr: "",
     keyword: event.keyword ?? null,
-    coordinates: coordsForPolice(id, division),
+    coordinates: approximateFeedCoordinates(
+      id,
+      "TPS",
+      event.location ?? "",
+      undefined,
+      division,
+    ),
     sourceLastIngest,
   }
 }

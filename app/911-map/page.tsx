@@ -734,8 +734,10 @@ export default function Page() {
                   <div className="space-y-2 px-4 py-3 text-sm text-white/70">
                     <p>{incident.location}</p>
                     <p className="text-[10px] leading-snug text-white/40">
-                      Map pin is approximate (area-level from GTA Update feed),
-                      not a verified street coordinate.
+                      GTA Update does not publish coordinates. When the text
+                      includes a postal area like (M5B), the pin is placed near
+                      that neighbourhood; otherwise it follows city or dispatch
+                      centroids—not the exact street corner.
                     </p>
                     <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 font-mono text-[11px] uppercase">
                       <span className="min-w-0 truncate">{incident.division}</span>
