@@ -348,7 +348,7 @@ function getProjectionType(
   map: mapboxgl.Map | null | undefined,
 ): string | null {
   const projection = map?.getProjection();
-  return typeof projection?.type === "string" ? projection.type : null;
+  return typeof projection?.name === "string" ? projection.name : null;
 }
 
 /**
