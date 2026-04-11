@@ -879,6 +879,10 @@ export default function Page() {
         </Map>
       </div>
 
+      {/* Targeted gradients to protect content legibility over light map */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-[72%] bg-[linear-gradient(90deg,rgba(5,7,7,0.60)_0%,rgba(5,7,7,0.28)_55%,transparent_88%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,rgba(5,7,7,0.52),transparent)]" />
+
       {newAlert && <NewAlertToast alert={newAlert} />}
 
       <section className="pointer-events-none relative z-10 flex min-h-[100dvh] flex-col justify-between p-4 sm:p-6 lg:p-8 xl:pr-[380px] 2xl:pr-[400px]">
@@ -893,7 +897,7 @@ export default function Page() {
                 <p className="text-[11px] text-[#7ad9cd]/70 uppercase">
                   Toronto dispatch surface
                 </p>
-                <h1 className="mt-1 text-5xl leading-none font-black text-pretty text-[#f4efe6] sm:text-7xl">
+                <h1 className="mt-1 text-5xl leading-none font-black text-pretty text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] sm:text-7xl">
                   911 Map
                 </h1>
               </div>
