@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { FeatureCollection, Point } from "geojson"
 import {
   Activity,
@@ -22,6 +22,7 @@ import {
   MarkerTooltip,
   useMap,
 } from "@/components/ui/map"
+import type { MapRef } from "@/components/ui/map"
 import { cn } from "@/lib/utils"
 
 type IncidentType = "police" | "fire" | "medical"
@@ -493,11 +494,6 @@ export default function Page() {
     useState<(typeof filterOptions)[number]>("all")
   const [showHotZones, setShowHotZones] = useState(true)
   const [liveIncidents, setLiveIncidents] = useState<LiveIncident[]>([])
-  const [liveCounts, setLiveCounts] = useState<{
-    police: number
-    fire: number
-    medical: number
-  } | null>(null)
   const [liveStatus, setLiveStatus] = useState<LiveStatus>("loading")
   const [liveError, setLiveError] = useState<string | null>(null)
   const [sourceLastIngest, setSourceLastIngest] = useState<string | null>(null)
@@ -506,6 +502,7 @@ export default function Page() {
   const hasLiveDataRef = useRef(false)
   const knownIncidentIdsRef = useRef<Set<string>>(new Set())
   const alertTimerRef = useRef<number | null>(null)
+  const mapRef = useRef<MapRef | null>(null)
 
   useEffect(() => {
     let isActive = true
@@ -537,9 +534,13 @@ export default function Page() {
 
         if (!isActive) return
 
-        const nextIncidents = Array.isArray(data.incidents)
-          ? data.incidents
-          : []
+        const rawIncidents = Array.isArray(data.incidents) ? data.incidents : []
+        const cutoffSec =
+          Math.floor(Date.now() / 1000) - selectedWindow * 3600
+        const nextIncidents = rawIncidents.filter(
+          (incident: LiveIncident) =>
+            incident.timestamp > 0 && incident.timestamp >= cutoffSec
+        )
         const knownIds = knownIncidentIdsRef.current
         const newIncidents =
           knownIds.size > 0
@@ -570,13 +571,6 @@ export default function Page() {
         }
 
         setLiveIncidents(nextIncidents)
-        setLiveCounts(
-          data.counts ?? {
-            police: nextIncidents.filter((i) => i.type === "police").length,
-            fire: nextIncidents.filter((i) => i.type === "fire").length,
-            medical: nextIncidents.filter((i) => i.type === "medical").length,
-          }
-        )
         setSourceLastIngest(data.sourceLastIngest)
         setFetchedAt(data.fetchedAt)
         setLiveStatus("connected")
@@ -633,13 +627,12 @@ export default function Page() {
   )
 
   const totals = useMemo(
-    () =>
-      liveCounts ?? {
-        police: liveIncidents.filter((i) => i.type === "police").length,
-        fire: liveIncidents.filter((i) => i.type === "fire").length,
-        medical: liveIncidents.filter((i) => i.type === "medical").length,
-      },
-    [liveCounts, liveIncidents]
+    () => ({
+      police: liveIncidents.filter((i) => i.type === "police").length,
+      fire: liveIncidents.filter((i) => i.type === "fire").length,
+      medical: liveIncidents.filter((i) => i.type === "medical").length,
+    }),
+    [liveIncidents]
   )
   const leadZone = liveHotZones[0]
   const newestIncident = liveIncidents[0]
@@ -652,10 +645,23 @@ export default function Page() {
           ? "Connecting live feed"
           : "Live feed offline"
 
+  const focusIncidentOnMap = useCallback((incident: LiveIncident) => {
+    const map = mapRef.current
+    if (!map) return
+    const [lng, lat] = incident.coordinates
+    map.flyTo({
+      center: [lng, lat],
+      zoom: Math.max(map.getZoom(), 13.5),
+      duration: 1100,
+      essential: true,
+    })
+  }, [])
+
   return (
     <main className="dark relative min-h-[100dvh] overflow-x-hidden overflow-y-hidden font-mono text-[#f5f2ea]">
       <div className="absolute inset-0 touch-pan-x touch-pan-y">
         <Map
+          ref={mapRef}
           theme="light"
           styles={{
             dark: torontoLightStyle,
@@ -853,6 +859,7 @@ export default function Page() {
           <LiveFeedPanel
             incidents={liveFilteredIncidents}
             liveStatus={liveStatus}
+            onSelectIncident={focusIncidentOnMap}
           />
         </div>
 
@@ -940,6 +947,7 @@ export default function Page() {
         <LiveFeedPanel
           incidents={liveFilteredIncidents}
           liveStatus={liveStatus}
+          onSelectIncident={focusIncidentOnMap}
         />
 
         <UsePolicyPanel />
@@ -1006,9 +1014,11 @@ function NewAlertToast({ alert }: { alert: NewAlertBanner }) {
 function LiveFeedPanel({
   incidents,
   liveStatus,
+  onSelectIncident,
 }: {
   incidents: LiveIncident[]
   liveStatus: LiveStatus
+  onSelectIncident?: (incident: LiveIncident) => void
 }) {
   return (
     <section className="max-h-[min(34vh,18rem)] overflow-hidden rounded-md border border-[#7ad9cd]/16 bg-[#070b0b]/94 shadow-[0_28px_90px_rgba(0,0,0,0.48)] backdrop-blur-md sm:max-h-[28vh]">
@@ -1026,9 +1036,22 @@ function LiveFeedPanel({
           const Icon = style.Icon
 
           return (
-            <div
+            <button
               key={incident.id}
-              className="grid grid-cols-[auto_1fr_auto] gap-2 border-b border-[#7ad9cd]/10 px-3 py-2.5 last:border-b-0"
+              type="button"
+              disabled={!onSelectIncident}
+              onClick={() => onSelectIncident?.(incident)}
+              title={
+                onSelectIncident
+                  ? "Show on map"
+                  : undefined
+              }
+              className={cn(
+                "grid w-full grid-cols-[auto_1fr_auto] gap-2 border-b border-[#7ad9cd]/10 px-3 py-2.5 text-left last:border-b-0",
+                onSelectIncident &&
+                  "cursor-pointer transition-colors hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#28d0b8]/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b0b]",
+                !onSelectIncident && "cursor-default opacity-90"
+              )}
             >
               <span
                 className={cn(
@@ -1052,7 +1075,7 @@ function LiveFeedPanel({
                   ? `${incident.dateStr} ${incident.timeLabel || ""}`.trim()
                   : incident.timeLabel || formatTimestampAge(incident.timestamp)}
               </span>
-            </div>
+            </button>
           )
         })}
         {incidents.length === 0 && (

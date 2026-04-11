@@ -186,11 +186,25 @@ export async function GET(request: NextRequest) {
       fetchJson<GtaPoliceEvent[]>(`/cache/gta_police_${windowHours}.json`),
     ])
 
+    // Upstream `gta_*_{n}h.json` files are not always strictly limited to n hours;
+    // enforce the window in UTC so the UI matches the selected range.
+    const nowSec = Math.floor(Date.now() / 1000)
+    const cutoffSec = nowSec - windowHours * 3600
+
+    const fireInWindow = fireEvents.filter((event) => {
+      const t = event.time_unix ?? 0
+      return t > 0 && t >= cutoffSec
+    })
+    const policeInWindow = policeEvents.filter((event) => {
+      const t = event.timestamp ?? 0
+      return t > 0 && t >= cutoffSec
+    })
+
     const incidents = [
-      ...fireEvents.map((event, index) =>
+      ...fireInWindow.map((event, index) =>
         normalizeFireEvent(event, sourceLastIngest, index)
       ),
-      ...policeEvents.map((event, index) =>
+      ...policeInWindow.map((event, index) =>
         normalizePoliceEvent(event, sourceLastIngest, index)
       ),
     ].sort((a, b) => b.timestamp - a.timestamp)
@@ -209,8 +223,8 @@ export async function GET(request: NextRequest) {
             .length,
         },
         upstream: {
-          fireCount: fireEvents.length,
-          policeCount: policeEvents.length,
+          fireCount: fireInWindow.length,
+          policeCount: policeInWindow.length,
         },
       },
       {
