@@ -1228,7 +1228,7 @@ function UsePolicyPanel() {
     <section className="rounded-md border border-[#ef4056]/18 bg-[#070b0b]/94 p-3 shadow-[0_22px_70px_rgba(0,0,0,0.38)] backdrop-blur-md">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[10px] text-[#ff6477] uppercase">Use policy</p>
-        <span className="rounded-md border border-[#ffb23f]/24 px-2 py-1 text-[9px] whitespace-nowrap text-[#ffbf5c]">
+        <span className="rounded-md border border-[#ef4056]/35 bg-[#ef4056]/12 px-2 py-1 font-mono text-[10px] whitespace-nowrap text-[#ff6477]">
           Not safety advice
         </span>
       </div>
