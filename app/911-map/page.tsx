@@ -890,6 +890,7 @@ export default function Page() {
           <div className="pointer-events-auto max-w-2xl">
             <div className="mb-5 flex items-start gap-4">
               <span className="relative grid size-12 place-items-center rounded-md border border-[#28d0b8]/30 bg-[#071312]/92 shadow-[0_0_34px_rgba(40,208,184,0.16)] backdrop-blur">
+                <span className="absolute inset-0 animate-[ping_2.8s_ease-out_infinite] rounded-md bg-[#28d0b8]/10" />
                 <span className="absolute inset-1 rounded-sm border border-[#28d0b8]/10" />
                 <Radio className="size-5 text-[#28d0b8]" />
               </span>
