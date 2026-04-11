@@ -1,7 +1,9 @@
 "use client";
 
-import MapLibreGL, { type PopupOptions, type MarkerOptions } from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX ?? "";
 import {
   createContext,
   forwardRef,
@@ -21,8 +23,8 @@ import { X, Minus, Plus, Locate, Maximize, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const defaultStyles = {
-  dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-  light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+  dark: "mapbox://styles/mapbox/dark-v11",
+  light: "mapbox://styles/mapbox/light-v11",
 };
 
 type Theme = "light" | "dark";
@@ -83,7 +85,7 @@ function useResolvedTheme(themeProp?: "light" | "dark"): Theme {
 }
 
 type MapContextValue = {
-  map: MapLibreGL.Map | null;
+  map: mapboxgl.Map | null;
   isLoaded: boolean;
 };
 
@@ -109,9 +111,9 @@ type MapViewport = {
   pitch: number;
 };
 
-type MapStyleOption = string | MapLibreGL.StyleSpecification;
+type MapStyleOption = string | mapboxgl.Style;
 
-type MapRef = MapLibreGL.Map;
+type MapRef = mapboxgl.Map;
 
 type MapProps = {
   children?: ReactNode;
@@ -127,8 +129,8 @@ type MapProps = {
     light?: MapStyleOption;
     dark?: MapStyleOption;
   };
-  /** Map projection type. Use `{ type: "globe" }` for 3D globe view. */
-  projection?: MapLibreGL.ProjectionSpecification;
+  /** Map projection type. Use `{ name: "globe" }` for 3D globe view. */
+  projection?: { name: string };
   /**
    * Controlled viewport. When provided with onViewportChange,
    * the map becomes controlled and viewport is driven by this prop.
@@ -142,7 +144,7 @@ type MapProps = {
   onViewportChange?: (viewport: MapViewport) => void;
   /** Show a loading indicator on the map */
   loading?: boolean;
-} & Omit<MapLibreGL.MapOptions, "container" | "style">;
+} & Omit<mapboxgl.MapboxOptions, "container" | "style">;
 
 function DefaultLoader() {
   return (
@@ -156,7 +158,7 @@ function DefaultLoader() {
   );
 }
 
-function getViewport(map: MapLibreGL.Map): MapViewport {
+function getViewport(map: mapboxgl.Map): MapViewport {
   const center = map.getCenter();
   return {
     center: [center.lng, center.lat],
@@ -181,7 +183,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mapInstance, setMapInstance] = useState<MapLibreGL.Map | null>(null);
+  const [mapInstance, setMapInstance] = useState<mapboxgl.Map | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isStyleLoaded, setIsStyleLoaded] = useState(false);
   const currentStyleRef = useRef<MapStyleOption | null>(null);
@@ -203,7 +205,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
   );
 
   // Expose the map instance to the parent component
-  useImperativeHandle(ref, () => mapInstance as MapLibreGL.Map, [mapInstance]);
+  useImperativeHandle(ref, () => mapInstance as mapboxgl.Map, [mapInstance]);
 
   const clearStyleTimeout = useCallback(() => {
     if (styleTimeoutRef.current) {
@@ -220,7 +222,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       resolvedTheme === "dark" ? mapStyles.dark : mapStyles.light;
     currentStyleRef.current = initialStyle;
 
-    const map = new MapLibreGL.Map({
+    const map = new mapboxgl.Map({
       container: containerRef.current,
       style: initialStyle,
       renderWorldCopies: false,
@@ -336,8 +338,8 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
 });
 
 type MarkerContextValue = {
-  marker: MapLibreGL.Marker;
-  map: MapLibreGL.Map | null;
+  marker: mapboxgl.Marker;
+  map: mapboxgl.Map | null;
 };
 
 const MarkerContext = createContext<MarkerContextValue | null>(null);
@@ -369,7 +371,7 @@ type MapMarkerProps = {
   onDrag?: (lngLat: { lng: number; lat: number }) => void;
   /** Callback when marker drag ends (requires draggable: true) */
   onDragEnd?: (lngLat: { lng: number; lat: number }) => void;
-} & Omit<MarkerOptions, "element">;
+} & Omit<mapboxgl.MarkerOptions, "element">;
 
 function MapMarker({
   longitude,
@@ -404,7 +406,7 @@ function MapMarker({
   };
 
   const marker = useMemo(() => {
-    const markerInstance = new MapLibreGL.Marker({
+    const markerInstance = new mapboxgl.Marker({
       ...markerOptions,
       element: document.createElement("div"),
       draggable,
@@ -525,7 +527,7 @@ type MarkerPopupProps = {
   className?: string;
   /** Show a close button in the popup (default: false) */
   closeButton?: boolean;
-} & Omit<PopupOptions, "className" | "closeButton">;
+} & Omit<mapboxgl.PopupOptions, "className" | "closeButton">;
 
 function MarkerPopup({
   children,
@@ -538,7 +540,7 @@ function MarkerPopup({
   const prevPopupOptions = useRef(popupOptions);
 
   const popup = useMemo(() => {
-    const popupInstance = new MapLibreGL.Popup({
+    const popupInstance = new mapboxgl.Popup({
       offset: 16,
       ...popupOptions,
       closeButton: false,
@@ -606,7 +608,7 @@ type MarkerTooltipProps = {
   children: ReactNode;
   /** Additional CSS classes for the tooltip container */
   className?: string;
-} & Omit<PopupOptions, "className" | "closeButton" | "closeOnClick">;
+} & Omit<mapboxgl.PopupOptions, "className" | "closeButton" | "closeOnClick">;
 
 function MarkerTooltip({
   children,
@@ -618,7 +620,7 @@ function MarkerTooltip({
   const prevTooltipOptions = useRef(popupOptions);
 
   const tooltip = useMemo(() => {
-    const tooltipInstance = new MapLibreGL.Popup({
+    const tooltipInstance = new mapboxgl.Popup({
       offset: 16,
       ...popupOptions,
       closeOnClick: true,
@@ -931,7 +933,7 @@ type MapPopupProps = {
   className?: string;
   /** Show a close button in the popup (default: false) */
   closeButton?: boolean;
-} & Omit<PopupOptions, "className" | "closeButton">;
+} & Omit<mapboxgl.PopupOptions, "className" | "closeButton">;
 
 function MapPopup({
   longitude,
@@ -949,7 +951,7 @@ function MapPopup({
   const container = useMemo(() => document.createElement("div"), []);
 
   const popup = useMemo(() => {
-    const popupInstance = new MapLibreGL.Popup({
+    const popupInstance = new mapboxgl.Popup({
       offset: 16,
       ...popupOptions,
       closeButton: false,

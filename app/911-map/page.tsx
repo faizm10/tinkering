@@ -10,7 +10,7 @@ import {
   Radio,
   ShieldAlert,
 } from "lucide-react"
-import type { GeoJSONSource, StyleSpecification } from "maplibre-gl"
+import type { GeoJSONSource } from "mapbox-gl"
 
 import {
   Map,
@@ -340,39 +340,7 @@ const typeStyles: Record<
 
 const filterOptions = ["all", "police", "fire", "medical"] as const
 
-const torontoDarkRasterStyle: StyleSpecification = {
-  version: 8,
-  sources: {
-    "carto-dark": {
-      type: "raster",
-      tiles: ["https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png"],
-      tileSize: 256,
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    },
-  },
-  layers: [
-    {
-      id: "gta-night-background",
-      type: "background",
-      paint: {
-        "background-color": "#050707",
-      },
-    },
-    {
-      id: "carto-dark-raster",
-      type: "raster",
-      source: "carto-dark",
-      paint: {
-        "raster-opacity": 0.86,
-        "raster-brightness-min": 0,
-        "raster-brightness-max": 0.72,
-        "raster-contrast": 0.18,
-        "raster-saturation": -0.45,
-      },
-    },
-  ],
-}
+const torontoLightStyle = "mapbox://styles/mapbox/light-v11"
 
 const roadTraces: [number, number][][] = [
   [
@@ -823,13 +791,13 @@ export default function Page() {
           : "Live feed offline"
 
   return (
-    <main className="dark relative min-h-[100dvh] overflow-hidden bg-[#050707] font-mono text-[#f5f2ea]">
+    <main className="dark relative min-h-[100dvh] overflow-hidden font-mono text-[#f5f2ea]">
       <div className="absolute inset-0">
         <Map
-          theme="dark"
+          theme="light"
           styles={{
-            dark: torontoDarkRasterStyle,
-            light: torontoDarkRasterStyle,
+            dark: torontoLightStyle,
+            light: torontoLightStyle,
           }}
           center={[-79.3832, 43.6532]}
           zoom={10.8}
@@ -837,7 +805,7 @@ export default function Page() {
           maxZoom={17}
           pitch={42}
           bearing={-17}
-          className="h-full w-full bg-[#050707] [&_.maplibregl-canvas]:bg-[#050707]"
+          className="h-full w-full"
         >
           <CityTraceLayer />
           <HotZoneLayer zones={hotZones} visible={showHotZones} />
@@ -911,10 +879,6 @@ export default function Page() {
         </Map>
       </div>
 
-      <div className="pointer-events-none absolute inset-0 bg-[#050707]/44" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(5,7,7,0.9)_0%,rgba(5,7,7,0.55)_34%,rgba(5,7,7,0.18)_68%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(9,10,10,0.96),rgba(9,10,10,0))]" />
-      <MapAtmosphere />
       {newAlert && <NewAlertToast alert={newAlert} />}
 
       <section className="pointer-events-none relative z-10 flex min-h-[100dvh] flex-col justify-between p-4 sm:p-6 lg:p-8 xl:pr-[380px] 2xl:pr-[400px]">
