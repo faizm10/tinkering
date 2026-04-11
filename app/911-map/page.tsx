@@ -1124,10 +1124,10 @@ function LiveFeedPanel({
   return (
     <section className="max-h-[28vh] overflow-hidden rounded-md border border-[#7ad9cd]/16 bg-[#070b0b]/94 shadow-[0_28px_90px_rgba(0,0,0,0.48)] backdrop-blur-md">
       <div className="flex items-center justify-between border-b border-[#7ad9cd]/14 px-3 py-2.5">
-        <p className="font-mono text-[10px] text-white/48 uppercase">
+        <p className="font-mono text-[10px] text-white/65 uppercase">
           Live feed
         </p>
-        <p className="font-mono text-[10px] text-white/48">
+        <p className="font-mono text-[10px] text-white/65">
           {incidents.length} calls
         </p>
       </div>
