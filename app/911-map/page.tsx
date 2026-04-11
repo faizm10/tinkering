@@ -807,7 +807,6 @@ export default function Page() {
           bearing={-17}
           className="h-full w-full"
         >
-          <CityTraceLayer />
           <HotZoneLayer zones={hotZones} visible={showHotZones} />
           <MapControls
             position="bottom-right"
