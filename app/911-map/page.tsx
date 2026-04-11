@@ -1289,7 +1289,7 @@ function Metric({
       <p className={cn("font-mono text-2xl leading-none font-black", tone)}>
         {value}
       </p>
-      <p className="mt-1 font-mono text-[9px] text-white/45 uppercase">
+      <p className="mt-1 font-mono text-[10px] text-white/50 uppercase">
         {label}
       </p>
     </div>
