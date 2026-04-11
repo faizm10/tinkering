@@ -340,15 +340,35 @@ const typeStyles: Record<
 
 const filterOptions = ["all", "police", "fire", "medical"] as const
 
-const torontoNightStyle: StyleSpecification = {
+const torontoDarkRasterStyle: StyleSpecification = {
   version: 8,
-  sources: {},
+  sources: {
+    "carto-dark": {
+      type: "raster",
+      tiles: ["https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png"],
+      tileSize: 256,
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    },
+  },
   layers: [
     {
       id: "gta-night-background",
       type: "background",
       paint: {
         "background-color": "#050707",
+      },
+    },
+    {
+      id: "carto-dark-raster",
+      type: "raster",
+      source: "carto-dark",
+      paint: {
+        "raster-opacity": 0.86,
+        "raster-brightness-min": 0,
+        "raster-brightness-max": 0.72,
+        "raster-contrast": 0.18,
+        "raster-saturation": -0.45,
       },
     },
   ],
@@ -808,8 +828,8 @@ export default function Page() {
         <Map
           theme="dark"
           styles={{
-            dark: torontoNightStyle,
-            light: torontoNightStyle,
+            dark: torontoDarkRasterStyle,
+            light: torontoDarkRasterStyle,
           }}
           center={[-79.3832, 43.6532]}
           zoom={10.8}
