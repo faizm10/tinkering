@@ -1109,7 +1109,7 @@ function MapRoute({
   useEffect(() => {
     if (!isLoaded || !map || coordinates.length < 2) return;
 
-    const source = map.getSource(sourceId) as MapLibreGL.GeoJSONSource;
+    const source = map.getSource(sourceId) as mapboxgl.GeoJSONSource;
     if (source) {
       source.setData({
         type: "Feature",
@@ -1314,7 +1314,7 @@ function MapClusterLayer<
   useEffect(() => {
     if (!isLoaded || !map || typeof data === "string") return;
 
-    const source = map.getSource(sourceId) as MapLibreGL.GeoJSONSource;
+    const source = map.getSource(sourceId) as mapboxgl.GeoJSONSource;
     if (source) {
       source.setData(data);
     }
@@ -1372,9 +1372,9 @@ function MapClusterLayer<
     if (!isLoaded || !map) return;
 
     // Cluster click handler - zoom into cluster
-    const handleClusterClick = async (
-      e: MapLibreGL.MapMouseEvent & {
-        features?: MapLibreGL.MapGeoJSONFeature[];
+    const handleClusterClick = (
+      e: mapboxgl.MapMouseEvent & {
+        features?: mapboxgl.GeoJSONFeature[];
       },
     ) => {
       const features = map.queryRenderedFeatures(e.point, {
@@ -1394,19 +1394,18 @@ function MapClusterLayer<
         onClusterClick(clusterId, coordinates, pointCount);
       } else {
         // Default behavior: zoom to cluster expansion zoom
-        const source = map.getSource(sourceId) as MapLibreGL.GeoJSONSource;
-        const zoom = await source.getClusterExpansionZoom(clusterId);
-        map.easeTo({
-          center: coordinates,
-          zoom,
+        const source = map.getSource(sourceId) as mapboxgl.GeoJSONSource;
+        source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err || zoom == null) return;
+          map.easeTo({ center: coordinates, zoom });
         });
       }
     };
 
     // Unclustered point click handler
     const handlePointClick = (
-      e: MapLibreGL.MapMouseEvent & {
-        features?: MapLibreGL.MapGeoJSONFeature[];
+      e: mapboxgl.MapMouseEvent & {
+        features?: mapboxgl.GeoJSONFeature[];
       },
     ) => {
       if (!onPointClick || !e.features?.length) return;
