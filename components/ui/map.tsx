@@ -226,9 +226,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       container: containerRef.current,
       style: initialStyle,
       renderWorldCopies: false,
-      attributionControl: {
-        compact: true,
-      },
+      attributionControl: true,
       ...props,
       ...viewport,
     });
@@ -312,7 +310,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     currentStyleRef.current = newStyle;
     setIsStyleLoaded(false);
 
-    mapInstance.setStyle(newStyle, { diff: true });
+    mapInstance.setStyle(newStyle as mapboxgl.Style);
   }, [mapInstance, resolvedTheme, mapStyles, clearStyleTimeout]);
 
   const contextValue = useMemo(
