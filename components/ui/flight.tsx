@@ -1,6 +1,6 @@
 "use client";
 
-import MapLibreGL from "maplibre-gl";
+import mapboxgl from "mapbox-gl";
 import {
   useCallback,
   useEffect,
@@ -120,15 +120,15 @@ type AirportMarkerDedupEntry = {
 };
 
 const airportMarkerDedupStores = new WeakMap<
-  MapLibreGL.Map,
+  mapboxgl.Map,
   Map<string, AirportMarkerDedupEntry>
 >();
 const airportMarkerDedupListeners = new WeakMap<
-  MapLibreGL.Map,
+  mapboxgl.Map,
   Set<() => void>
 >();
 
-function getAirportMarkerDedupStore(map: MapLibreGL.Map) {
+function getAirportMarkerDedupStore(map: mapboxgl.Map) {
   let store = airportMarkerDedupStores.get(map);
   if (!store) {
     store = new Map<string, AirportMarkerDedupEntry>();
@@ -137,7 +137,7 @@ function getAirportMarkerDedupStore(map: MapLibreGL.Map) {
   return store;
 }
 
-function getAirportMarkerDedupListeners(map: MapLibreGL.Map) {
+function getAirportMarkerDedupListeners(map: mapboxgl.Map) {
   let listeners = airportMarkerDedupListeners.get(map);
   if (!listeners) {
     listeners = new Set<() => void>();
@@ -146,12 +146,12 @@ function getAirportMarkerDedupListeners(map: MapLibreGL.Map) {
   return listeners;
 }
 
-function notifyAirportMarkerDedupListeners(map: MapLibreGL.Map) {
+function notifyAirportMarkerDedupListeners(map: mapboxgl.Map) {
   getAirportMarkerDedupListeners(map).forEach((listener) => listener());
 }
 
 function subscribeAirportMarkerDedup(
-  map: MapLibreGL.Map | null,
+  map: mapboxgl.Map | null,
   listener: () => void,
 ) {
   if (!map) return () => {};
@@ -165,7 +165,7 @@ function subscribeAirportMarkerDedup(
 }
 
 function getAirportMarkerOwnerId(
-  map: MapLibreGL.Map | null,
+  map: mapboxgl.Map | null,
   dedupeKey: string,
 ) {
   if (!map) return null;
@@ -173,7 +173,7 @@ function getAirportMarkerOwnerId(
 }
 
 function claimAirportMarker(
-  map: MapLibreGL.Map | null,
+  map: mapboxgl.Map | null,
   dedupeKey: string,
   markerId: string,
 ) {
@@ -210,7 +210,7 @@ function claimAirportMarker(
 }
 
 function useAirportMarkerVisibility(
-  map: MapLibreGL.Map | null,
+  map: mapboxgl.Map | null,
   dedupeKey?: string,
 ): boolean {
   const markerId = useId();
@@ -345,7 +345,7 @@ function resolveArcGeometryForProjection(
 }
 
 function getProjectionType(
-  map: MapLibreGL.Map | null | undefined,
+  map: mapboxgl.Map | null | undefined,
 ): string | null {
   const projection = map?.getProjection();
   return typeof projection?.type === "string" ? projection.type : null;
@@ -854,7 +854,7 @@ function FlightRoute({
   useEffect(() => {
     if (!isLoaded || !map || !renderedArcGeometry) return;
 
-    const source = map.getSource(sourceId) as MapLibreGL.GeoJSONSource;
+    const source = map.getSource(sourceId) as mapboxgl.GeoJSONSource;
     if (source) {
       source.setData({
         type: "Feature",
@@ -888,7 +888,7 @@ function FlightRoute({
     if (!isLoaded || !map || !interactive) return;
 
     // Create a reusable tooltip popup for this route
-    const tooltip = new MapLibreGL.Popup({
+    const tooltip = new mapboxgl.Popup({
       closeButton: false,
       closeOnClick: false,
       offset: 15,
@@ -898,7 +898,7 @@ function FlightRoute({
 
     const handleClick = () => onClickRef.current?.();
 
-    const handleMouseEnter = (e: MapLibreGL.MapLayerMouseEvent & object) => {
+    const handleMouseEnter = (e: mapboxgl.MapLayerMouseEvent & object) => {
       map.getCanvas().style.cursor = "pointer";
 
       if (hoverEffectRef.current && map.getLayer(layerId)) {
@@ -923,7 +923,7 @@ function FlightRoute({
       onMouseEnterRef.current?.();
     };
 
-    const handleMouseMove = (e: MapLibreGL.MapLayerMouseEvent & object) => {
+    const handleMouseMove = (e: mapboxgl.MapLayerMouseEvent & object) => {
       if (tooltip.isOpen()) {
         tooltip.setLngLat(e.lngLat);
       }
@@ -1463,7 +1463,7 @@ function normalizeLngLat(coord: [number, number]): [number, number] {
  * and other non-linear projections; fall back to geographic bearing.
  */
 function calculateMarkerRotation(
-  map: MapLibreGL.Map | null,
+  map: mapboxgl.Map | null,
   from: [number, number],
   to: [number, number],
 ): number {
@@ -1510,7 +1510,7 @@ function FlightAnimationMarker({
   config: FlightRouteAnimateConfig;
 }) {
   const { map } = useMap();
-  const markerRef = useRef<MapLibreGL.Marker | null>(null);
+  const markerRef = useRef<mapboxgl.Marker | null>(null);
   const markerElRef = useRef<HTMLDivElement | null>(null);
   const animationRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -1602,7 +1602,7 @@ function FlightAnimationMarker({
     const el = document.createElement("div");
     markerElRef.current = el;
 
-    const marker = new MapLibreGL.Marker({
+    const marker = new mapboxgl.Marker({
       element: el,
       anchor: "center",
       rotationAlignment: "map",
@@ -1725,7 +1725,7 @@ function FlightMultiLegAnimationMarker({
   config: FlightRouteAnimateConfig;
 }) {
   const { map } = useMap();
-  const markerRef = useRef<MapLibreGL.Marker | null>(null);
+  const markerRef = useRef<mapboxgl.Marker | null>(null);
   const markerElRef = useRef<HTMLDivElement | null>(null);
   const animationRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -1902,7 +1902,7 @@ function FlightMultiLegAnimationMarker({
     const firstCoord = legData.legs[0]?.coords[0];
     if (!firstCoord) return;
 
-    const marker = new MapLibreGL.Marker({
+    const marker = new mapboxgl.Marker({
       element: el,
       anchor: "center",
       rotationAlignment: "map",
