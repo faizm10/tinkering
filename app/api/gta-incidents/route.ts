@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import {
+  classifyTfsIncidentType,
+  coordsForPolice,
+  coordsForTfsCity,
+} from "@/lib/gta-approximate-geo"
+
 type IncidentType = "police" | "fire" | "medical"
 type IncidentService = "TPS" | "TFS"
 
@@ -19,6 +25,11 @@ type NormalizedIncident = {
   alarmLevel: number
   isUpdated: boolean
   cityName: string
+  cityCode: string
+  dateStr: string
+  keyword: string | null
+  /** Approximate map position (area centroid + jitter); not a street fix. */
+  coordinates: [number, number]
   sourceLastIngest: string
 }
 
@@ -26,6 +37,7 @@ type GtaFireEvent = {
   event_id?: string | number
   time_unix?: number
   time_str?: string
+  date_str?: string
   division?: string
   division_id?: number
   description?: string
@@ -35,6 +47,7 @@ type GtaFireEvent = {
   alarm_level?: number
   is_updated?: number | boolean
   city_name?: string
+  city_code?: string
 }
 
 type GtaPoliceEvent = {
@@ -46,13 +59,15 @@ type GtaPoliceEvent = {
   location?: string
   timestamp?: number
   highlight?: boolean
+  keyword?: string | null
 }
 
 const GTA_BASE_URL = "https://gtaupdate.com"
-const CACHE_SECONDS = 60
+/** Short cache so UI stays close to gtaupdate.com without hammering their CDN. */
+const CACHE_SECONDS = 45
 const SUPPORTED_WINDOWS = [1, 3, 6, 12, 24] as const
 
-export const revalidate = 60
+export const revalidate = 45
 
 function parseWindow(value: string | null) {
   const parsed = Number(value)
@@ -100,13 +115,12 @@ function normalizeFireEvent(
 ): NormalizedIncident {
   const sourceId = String(event.event_id ?? `fire-${index}`)
   const description = event.description?.trim() || "Unknown fire call"
-  const type =
-    description === "Medical" || description === "Medical Upd"
-      ? "medical"
-      : "fire"
+  const type = classifyTfsIncidentType(description)
+  const cityCode = (event.city_code ?? "").toUpperCase()
+  const id = `TFS-${sourceId}`
 
   return {
-    id: `TFS-${sourceId}`,
+    id,
     sourceId,
     type,
     service: "TFS",
@@ -121,6 +135,10 @@ function normalizeFireEvent(
     alarmLevel: event.alarm_level ?? 0,
     isUpdated: Boolean(event.is_updated),
     cityName: event.city_name ?? "",
+    cityCode,
+    dateStr: event.date_str ?? "",
+    keyword: null,
+    coordinates: coordsForTfsCity(event.city_code, id),
     sourceLastIngest,
   }
 }
@@ -131,15 +149,17 @@ function normalizePoliceEvent(
   index: number
 ): NormalizedIncident {
   const sourceId = String(event.id ?? `police-${index}`)
+  const id = `TPS-${sourceId}`
+  const division = event.division ?? "TPS"
 
   return {
-    id: `TPS-${sourceId}`,
+    id,
     sourceId,
     type: "police",
     service: "TPS",
     timestamp: event.timestamp ?? 0,
     timeLabel: event.time ?? "",
-    division: event.division ?? "TPS",
+    division,
     divisionId: event.division_id ?? null,
     description: event.description?.trim() || "Unknown police call",
     location: event.location?.trim() || "-",
@@ -148,6 +168,10 @@ function normalizePoliceEvent(
     alarmLevel: 0,
     isUpdated: false,
     cityName: "",
+    cityCode: "",
+    dateStr: "",
+    keyword: event.keyword ?? null,
+    coordinates: coordsForPolice(id, division),
     sourceLastIngest,
   }
 }

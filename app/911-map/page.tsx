@@ -26,17 +26,6 @@ import { cn } from "@/lib/utils"
 
 type IncidentType = "police" | "fire" | "medical"
 
-type Incident = {
-  id: string
-  type: IncidentType
-  minutesAgo: number
-  division: string
-  description: string
-  location: string
-  units: number
-  coordinates: [number, number]
-}
-
 type LiveIncident = {
   id: string
   sourceId: string
@@ -53,6 +42,11 @@ type LiveIncident = {
   alarmLevel: number
   isUpdated: boolean
   cityName: string
+  cityCode: string
+  dateStr: string
+  keyword: string | null
+  /** Approximate (from `/api/gta-incidents`); area-level, not street-precise. */
+  coordinates: [number, number]
   sourceLastIngest: string
 }
 
@@ -61,6 +55,11 @@ type GtaIncidentsResponse = {
   sourceLastIngest: string | null
   fetchedAt: string
   incidents: LiveIncident[]
+  counts?: {
+    police: number
+    fire: number
+    medical: number
+  }
   error?: string
 }
 
@@ -87,223 +86,82 @@ type CityLabel = {
 
 const timeWindows = [1, 3, 6, 12, 24] as const
 
-const incidents: Incident[] = [
-  {
-    id: "TPS-2417",
-    type: "police",
-    minutesAgo: 7,
-    division: "52",
-    description: "Priority response",
-    location: "Queen St W / University Ave",
-    units: 4,
-    coordinates: [-79.3893, 43.6507],
-  },
-  {
-    id: "TFS-1089",
-    type: "fire",
-    minutesAgo: 12,
-    division: "TFS",
-    description: "Alarm highrise residential",
-    location: "Bay St / Wellesley St W",
-    units: 5,
-    coordinates: [-79.3848, 43.6632],
-  },
-  {
-    id: "TFS-1091",
-    type: "medical",
-    minutesAgo: 18,
-    division: "TFS",
-    description: "Medical assist",
-    location: "Dundas St W / Spadina Ave",
-    units: 2,
-    coordinates: [-79.3988, 43.6535],
-  },
-  {
-    id: "TPS-2420",
-    type: "police",
-    minutesAgo: 27,
-    division: "14",
-    description: "Break and enter",
-    location: "College St / Ossington Ave",
-    units: 3,
-    coordinates: [-79.4203, 43.6556],
-  },
-  {
-    id: "TFS-1094",
-    type: "fire",
-    minutesAgo: 43,
-    division: "TFS",
-    description: "Smoke investigation",
-    location: "King St W / Dufferin St",
-    units: 3,
-    coordinates: [-79.4278, 43.6386],
-  },
-  {
-    id: "TPS-2428",
-    type: "police",
-    minutesAgo: 58,
-    division: "51",
-    description: "Disturbance",
-    location: "Parliament St / Gerrard St E",
-    units: 2,
-    coordinates: [-79.3654, 43.6621],
-  },
-  {
-    id: "TFS-1100",
-    type: "medical",
-    minutesAgo: 71,
-    division: "TFS",
-    description: "Medical assist",
-    location: "Yonge St / Eglinton Ave",
-    units: 2,
-    coordinates: [-79.3986, 43.7065],
-  },
-  {
-    id: "TPS-2434",
-    type: "police",
-    minutesAgo: 88,
-    division: "53",
-    description: "Traffic hazard",
-    location: "Eglinton Ave E / Mount Pleasant Rd",
-    units: 2,
-    coordinates: [-79.3898, 43.7088],
-  },
-  {
-    id: "TFS-1106",
-    type: "fire",
-    minutesAgo: 96,
-    division: "TFS",
-    description: "Vehicle collision",
-    location: "Lake Shore Blvd W / Bathurst St",
-    units: 4,
-    coordinates: [-79.3997, 43.6365],
-  },
-  {
-    id: "TPS-2441",
-    type: "police",
-    minutesAgo: 118,
-    division: "55",
-    description: "Priority response",
-    location: "Danforth Ave / Broadview Ave",
-    units: 3,
-    coordinates: [-79.3587, 43.6773],
-  },
-  {
-    id: "TFS-1112",
-    type: "medical",
-    minutesAgo: 143,
-    division: "TFS",
-    description: "Medical assist",
-    location: "Pape Ave / Gerrard St E",
-    units: 2,
-    coordinates: [-79.3452, 43.6692],
-  },
-  {
-    id: "TPS-2453",
-    type: "police",
-    minutesAgo: 176,
-    division: "41",
-    description: "Suspicious incident",
-    location: "Kennedy Rd / Eglinton Ave E",
-    units: 2,
-    coordinates: [-79.2628, 43.7321],
-  },
-  {
-    id: "TFS-1120",
-    type: "fire",
-    minutesAgo: 221,
-    division: "TFS",
-    description: "Alarm commercial",
-    location: "Scarborough Town Centre",
-    units: 4,
-    coordinates: [-79.2587, 43.7764],
-  },
-  {
-    id: "TPS-2460",
-    type: "police",
-    minutesAgo: 264,
-    division: "23",
-    description: "Assist citizen",
-    location: "Rexdale Blvd / Islington Ave",
-    units: 2,
-    coordinates: [-79.5638, 43.7179],
-  },
-  {
-    id: "TFS-1128",
-    type: "medical",
-    minutesAgo: 315,
-    division: "TFS",
-    description: "Medical assist",
-    location: "Jane St / Finch Ave W",
-    units: 2,
-    coordinates: [-79.5176, 43.7576],
-  },
-  {
-    id: "TPS-2471",
-    type: "police",
-    minutesAgo: 392,
-    division: "22",
-    description: "Collision investigation",
-    location: "Kipling Ave / Bloor St W",
-    units: 3,
-    coordinates: [-79.5314, 43.6378],
-  },
-  {
-    id: "TFS-1141",
-    type: "fire",
-    minutesAgo: 486,
-    division: "TFS",
-    description: "Wires down",
-    location: "Leslie St / Sheppard Ave E",
-    units: 3,
-    coordinates: [-79.365, 43.7717],
-  },
-  {
-    id: "TPS-2482",
-    type: "police",
-    minutesAgo: 602,
-    division: "32",
-    description: "Unknown trouble",
-    location: "Yonge St / Sheppard Ave",
-    units: 4,
-    coordinates: [-79.4107, 43.7615],
-  },
-]
+const MAP_MARKER_CAP = 150
 
-const hotZones: HotZone[] = [
-  {
-    id: "downtown-core",
-    name: "Downtown Core",
-    count: 38,
-    trend: "+18% over normal",
-    dominant: "police",
-    coordinates: [-79.3874, 43.6553],
-  },
-  {
-    id: "west-end",
-    name: "West End",
-    count: 24,
-    trend: "steady activity",
-    dominant: "fire",
-    coordinates: [-79.4251, 43.6468],
-  },
-  {
-    id: "midtown",
-    name: "Midtown",
-    count: 19,
-    trend: "+9% over normal",
-    dominant: "medical",
-    coordinates: [-79.3982, 43.7075],
-  },
-  {
-    id: "scarborough-centre",
-    name: "Scarborough Centre",
-    count: 16,
-    trend: "cluster forming",
-    dominant: "police",
-    coordinates: [-79.2597, 43.774],
-  },
-]
+function zoneLabelForIncident(incident: LiveIncident) {
+  if (incident.service === "TFS") {
+    const place = incident.cityName?.trim()
+    if (place) return place
+    if (incident.cityCode) return incident.cityCode
+    return "Toronto (TFS)"
+  }
+  return incident.division?.trim() || "TPS"
+}
+
+function buildLiveHotZones(
+  incidents: LiveIncident[],
+  windowHours: number
+): HotZone[] {
+  type Agg = {
+    displayName: string
+    count: number
+    byType: Record<IncidentType, number>
+    sumLng: number
+    sumLat: number
+    n: number
+  }
+
+  const buckets = new globalThis.Map<string, Agg>()
+
+  for (const incident of incidents) {
+    const displayName = zoneLabelForIncident(incident)
+    const key = displayName.toLowerCase()
+    let row = buckets.get(key)
+    if (!row) {
+      row = {
+        displayName,
+        count: 0,
+        byType: { police: 0, fire: 0, medical: 0 },
+        sumLng: 0,
+        sumLat: 0,
+        n: 0,
+      }
+      buckets.set(key, row)
+    }
+    row.count += 1
+    row.byType[incident.type] += 1
+    row.sumLng += incident.coordinates[0]
+    row.sumLat += incident.coordinates[1]
+    row.n += 1
+  }
+
+  const dominant = (by: Record<IncidentType, number>): IncidentType => {
+    if (by.police >= by.fire && by.police >= by.medical) return "police"
+    if (by.fire >= by.medical) return "fire"
+    return "medical"
+  }
+
+  return [...buckets.values()]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
+    .map((row, index) => {
+      const slug = row.displayName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+      return {
+        id: `live-${slug || "zone"}-${index}`,
+        name: row.displayName,
+        count: row.count,
+        trend: `${row.count} calls · last ${windowHours}h`,
+        dominant: dominant(row.byType),
+        coordinates: [
+          row.sumLng / row.n,
+          row.sumLat / row.n,
+        ] as [number, number],
+      }
+    })
+}
 
 const typeStyles: Record<
   IncidentType,
@@ -601,13 +459,6 @@ function CityTraceLayer() {
   )
 }
 
-function formatAge(minutes: number) {
-  if (minutes < 60) return `${minutes} min ago`
-  const hours = Math.floor(minutes / 60)
-  const remaining = minutes % 60
-  return remaining ? `${hours}h ${remaining}m ago` : `${hours}h ago`
-}
-
 function formatTimestampAge(timestamp: number) {
   if (!timestamp) return "unknown"
 
@@ -642,6 +493,11 @@ export default function Page() {
     useState<(typeof filterOptions)[number]>("all")
   const [showHotZones, setShowHotZones] = useState(true)
   const [liveIncidents, setLiveIncidents] = useState<LiveIncident[]>([])
+  const [liveCounts, setLiveCounts] = useState<{
+    police: number
+    fire: number
+    medical: number
+  } | null>(null)
   const [liveStatus, setLiveStatus] = useState<LiveStatus>("loading")
   const [liveError, setLiveError] = useState<string | null>(null)
   const [sourceLastIngest, setSourceLastIngest] = useState<string | null>(null)
@@ -714,6 +570,13 @@ export default function Page() {
         }
 
         setLiveIncidents(nextIncidents)
+        setLiveCounts(
+          data.counts ?? {
+            police: nextIncidents.filter((i) => i.type === "police").length,
+            fire: nextIncidents.filter((i) => i.type === "fire").length,
+            medical: nextIncidents.filter((i) => i.type === "medical").length,
+          }
+        )
         setSourceLastIngest(data.sourceLastIngest)
         setFetchedAt(data.fetchedAt)
         setLiveStatus("connected")
@@ -738,7 +601,7 @@ export default function Page() {
       hasLiveDataRef.current && current !== "error" ? "stale" : "loading"
     )
     loadIncidents()
-    const intervalId = window.setInterval(loadIncidents, 60_000)
+    const intervalId = window.setInterval(loadIncidents, 45_000)
 
     return () => {
       isActive = false
@@ -751,16 +614,6 @@ export default function Page() {
     }
   }, [selectedWindow])
 
-  const mapIncidents = useMemo(() => {
-    const maxAge = selectedWindow * 60
-    return incidents.filter((incident) => {
-      const inWindow = incident.minutesAgo <= maxAge
-      const matchesType =
-        selectedType === "all" || incident.type === selectedType
-      return inWindow && matchesType
-    })
-  }, [selectedType, selectedWindow])
-
   const liveFilteredIncidents = useMemo(
     () =>
       liveIncidents.filter(
@@ -769,17 +622,26 @@ export default function Page() {
     [liveIncidents, selectedType]
   )
 
-  const totals = useMemo(
-    () => ({
-      police: liveIncidents.filter((incident) => incident.type === "police")
-        .length,
-      fire: liveIncidents.filter((incident) => incident.type === "fire").length,
-      medical: liveIncidents.filter((incident) => incident.type === "medical")
-        .length,
-    }),
-    [liveIncidents]
+  const liveHotZones = useMemo(
+    () => buildLiveHotZones(liveIncidents, selectedWindow),
+    [liveIncidents, selectedWindow]
   )
-  const leadZone = hotZones[0]
+
+  const mapMarkers = useMemo(
+    () => liveFilteredIncidents.slice(0, MAP_MARKER_CAP),
+    [liveFilteredIncidents]
+  )
+
+  const totals = useMemo(
+    () =>
+      liveCounts ?? {
+        police: liveIncidents.filter((i) => i.type === "police").length,
+        fire: liveIncidents.filter((i) => i.type === "fire").length,
+        medical: liveIncidents.filter((i) => i.type === "medical").length,
+      },
+    [liveCounts, liveIncidents]
+  )
+  const leadZone = liveHotZones[0]
   const newestIncident = liveIncidents[0]
   const liveStatusLabel =
     liveStatus === "connected"
@@ -807,7 +669,7 @@ export default function Page() {
           bearing={-17}
           className="h-full w-full"
         >
-          <HotZoneLayer zones={hotZones} visible={showHotZones} />
+          <HotZoneLayer zones={liveHotZones} visible={showHotZones} />
           <MapControls
             position="bottom-right"
             showZoom
@@ -817,7 +679,7 @@ export default function Page() {
             className="right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1.25rem,env(safe-area-inset-bottom))] xl:right-[calc(356px+env(safe-area-inset-right))] 2xl:right-[calc(376px+env(safe-area-inset-right))]"
           />
 
-          {mapIncidents.map((incident) => {
+          {mapMarkers.map((incident) => {
             const style = typeStyles[incident.type]
             const Icon = style.Icon
 
@@ -853,7 +715,7 @@ export default function Page() {
                         )}
                       >
                         <Icon className="size-4" />
-                        {style.label}
+                        {incident.service} · {style.label}
                       </span>
                       <span className="font-mono text-[11px] text-white/52">
                         {incident.id}
@@ -865,10 +727,20 @@ export default function Page() {
                   </div>
                   <div className="space-y-2 px-4 py-3 text-sm text-white/70">
                     <p>{incident.location}</p>
-                    <div className="flex items-center justify-between font-mono text-[11px] uppercase">
-                      <span>Div. {incident.division}</span>
-                      <span>{incident.units} units</span>
-                      <span>{formatAge(incident.minutesAgo)}</span>
+                    <p className="text-[10px] leading-snug text-white/40">
+                      Map pin is approximate (area-level from GTA Update feed),
+                      not a verified street coordinate.
+                    </p>
+                    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 font-mono text-[11px] uppercase">
+                      <span className="min-w-0 truncate">{incident.division}</span>
+                      {incident.service === "TFS" ? (
+                        <span className="max-w-[9rem] truncate text-white/55 normal-case">
+                          {incident.units || "—"}
+                        </span>
+                      ) : (
+                        <span className="text-white/55">—</span>
+                      )}
+                      <span>{formatTimestampAge(incident.timestamp)}</span>
                     </div>
                   </div>
                 </MarkerPopup>
@@ -905,8 +777,8 @@ export default function Page() {
             <div className="grid max-w-2xl grid-cols-1 border-y border-[#7ad9cd]/16 bg-[#07100f]/62 text-sm text-white/70 backdrop-blur-sm sm:grid-cols-3">
               <SignalStat label="Window" value={`${selectedWindow}h`} />
               <SignalStat
-                label="Lead zone"
-                value={leadZone.name}
+                label="Busiest area"
+                value={leadZone?.name ?? "—"}
                 tone="text-[#ffbf5c]"
               />
               <SignalStat
@@ -946,8 +818,19 @@ export default function Page() {
               )}
             </div>
             <p className="mt-3 max-w-xl text-[11px] leading-5 text-white/46">
-              Awareness only. Not affiliated with Toronto Police, Toronto Fire,
-              the City of Toronto, or GTA Update. In an emergency, call 911.
+              Live lists and counts mirror{" "}
+              <a
+                href="https://gtaupdate.com"
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#7ad9cd]/80 underline-offset-2 hover:text-[#36dec8] hover:underline"
+              >
+                gtaupdate.com
+              </a>{" "}
+              for the selected time window. Map pins are approximate (city /
+              dispatch-area centroids with jitter), not verified coordinates.
+              Not affiliated with TPS, TFS, the City of Toronto, or GTA Update. In
+              an emergency, call 911.
             </p>
           </div>
 
@@ -1034,7 +917,7 @@ export default function Page() {
           </div>
 
           <aside className="pointer-events-auto w-full max-w-[360px] overflow-hidden rounded-md border border-[#7ad9cd]/16 bg-[#070b0b]/94 shadow-[0_28px_90px_rgba(0,0,0,0.48)] backdrop-blur-md xl:hidden">
-            <PressurePanel hotZones={hotZones} />
+            <PressurePanel hotZones={liveHotZones} />
           </aside>
 
           <div className="pointer-events-auto w-full max-w-2xl xl:hidden">
@@ -1062,7 +945,7 @@ export default function Page() {
         <UsePolicyPanel />
 
         <section className="min-h-0 flex-1 overflow-hidden rounded-md border border-[#7ad9cd]/16 bg-[#070b0b]/94 shadow-[0_28px_90px_rgba(0,0,0,0.48)] backdrop-blur-md">
-          <PressurePanel hotZones={hotZones} />
+          <PressurePanel hotZones={liveHotZones} />
         </section>
       </aside>
     </main>
@@ -1157,14 +1040,17 @@ function LiveFeedPanel({
               </span>
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold">
+                  <span className="text-white/55">{incident.service}</span> ·{" "}
                   {incident.description}
                 </p>
                 <p className="mt-1 truncate text-[11px] text-white/50">
                   {incident.location}
                 </p>
               </div>
-              <span className="font-mono text-[10px] whitespace-nowrap text-white/48">
-                {formatTimestampAge(incident.timestamp)}
+              <span className="max-w-[5.5rem] shrink-0 text-right font-mono text-[10px] leading-tight whitespace-normal text-white/48 sm:max-w-none sm:whitespace-nowrap">
+                {incident.dateStr
+                  ? `${incident.dateStr} ${incident.timeLabel || ""}`.trim()
+                  : incident.timeLabel || formatTimestampAge(incident.timestamp)}
               </span>
             </div>
           )
@@ -1197,33 +1083,40 @@ function PressurePanel({ hotZones }: { hotZones: HotZone[] }) {
       </div>
 
       <div className="min-h-0 flex-1 divide-y divide-[#7ad9cd]/12 overflow-auto">
-        {hotZones.map((zone) => {
-          const style = typeStyles[zone.dominant]
-          return (
-            <div
-              key={zone.id}
-              className="grid grid-cols-[1fr_auto] gap-3 px-3 py-2.5"
-            >
-              <div>
-                <p className="text-sm font-semibold">{zone.name}</p>
-                <p className="mt-1 text-xs text-white/56">{zone.trend}</p>
+        {hotZones.length === 0 ? (
+          <div className="px-3 py-6 text-xs text-white/48">
+            No activity groups yet. When the live feed connects, areas are
+            ranked from GTA Update calls in the current window.
+          </div>
+        ) : (
+          hotZones.map((zone) => {
+            const style = typeStyles[zone.dominant]
+            return (
+              <div
+                key={zone.id}
+                className="grid grid-cols-[1fr_auto] gap-3 px-3 py-2.5"
+              >
+                <div>
+                  <p className="text-sm font-semibold">{zone.name}</p>
+                  <p className="mt-1 text-xs text-white/56">{zone.trend}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-mono text-lg leading-none font-bold">
+                    {zone.count}
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-1 font-mono text-[10px] uppercase",
+                      style.text
+                    )}
+                  >
+                    {style.label}
+                  </p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-mono text-lg leading-none font-bold">
-                  {zone.count}
-                </p>
-                <p
-                  className={cn(
-                    "mt-1 font-mono text-[10px] uppercase",
-                    style.text
-                  )}
-                >
-                  {style.label}
-                </p>
-              </div>
-            </div>
-          )
-        })}
+            )
+          })
+        )}
       </div>
     </div>
   )
@@ -1241,8 +1134,18 @@ function UsePolicyPanel() {
       <div className="mt-2 space-y-1.5 text-[11px] leading-4 text-white/50">
         <p>Unofficial public-awareness view. Not an emergency service.</p>
         <p>
-          Live feed data is attributed to GTA Update. Map signals are prototype
-          activity layers, not exact incident locations.
+          Call list and category counts are read from the same public JSON feeds
+          published at{" "}
+          <a
+            href="https://gtaupdate.com"
+            target="_blank"
+            rel="noreferrer"
+            className="text-[#7ad9cd]/75 underline-offset-2 hover:text-[#36dec8] hover:underline"
+          >
+            gtaupdate.com
+          </a>
+          . Pins and heat are derived for visualization (area centroids), not
+          dispatch-grade coordinates.
         </p>
         <p>No safety, routing, crime-risk, or danger-zone decisions.</p>
       </div>
