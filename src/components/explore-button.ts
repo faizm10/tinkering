@@ -1,0 +1,2 @@
+export const exploreButtonClassName =
+  "inline-flex rounded-none border border-black/10 bg-white px-5 py-2.5 text-sm font-medium lowercase tracking-wide text-neutral-900 shadow-sm shadow-black/5 transition-[background-color,transform,box-shadow] hover:bg-neutral-50 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400 active:scale-[0.98]"

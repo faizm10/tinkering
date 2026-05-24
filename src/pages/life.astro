@@ -1,0 +1,12 @@
+---
+import Layout from "../layouts/Layout.astro"
+import { exploreButtonClassName } from "../components/explore-button"
+---
+
+<Layout title="Life">
+  <main class="relative min-h-dvh bg-[var(--landing-bg)]">
+    <a href="/" class={`absolute top-6 right-6 z-10 ${exploreButtonClassName}`}>
+      explore
+    </a>
+  </main>
+</Layout>
