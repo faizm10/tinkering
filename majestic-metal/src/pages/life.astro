@@ -1,0 +1,46 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Life" description="A quieter corner.">
+  <main class="landing life-page">
+    <a href="/" class="explore-btn">explore</a>
+    <div class="life-page__content">
+      <h1>life</h1>
+      <p>A minimal page for now — room to grow later.</p>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .life-page__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    gap: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .life-page__content h1 {
+    margin: 0;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  .life-page__content p {
+    margin: 0;
+    max-width: 28rem;
+    color: rgba(23, 23, 23, 0.65);
+    line-height: 1.6;
+  }
+
+  .life-page .explore-btn {
+    animation: none;
+  }
+</style>
