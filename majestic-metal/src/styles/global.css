@@ -1,0 +1,378 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--landing-bg);
+  color: #171717;
+}
+
+:root {
+  --landing-bg: #ebe5ea;
+}
+
+.landing {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--landing-bg);
+}
+
+.explore-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 10;
+  display: inline-flex;
+  padding: 0.625rem 1.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+  background: #fff;
+  color: #171717;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.explore-btn:hover {
+  background: #fafafa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.explore-btn:active {
+  transform: scale(0.98);
+}
+
+.explore-btn:focus-visible {
+  outline: 2px solid #a3a3a3;
+  outline-offset: 2px;
+}
+
+.hero-visual {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+}
+
+.hero-kim-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+
+.hero-img--kim {
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 18px 40px rgba(60, 40, 70, 0.18));
+}
+
+@keyframes river-scroll-slow {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes river-scroll-mid {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes river-scroll-fast {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes river-shimmer-pass {
+  0% {
+    transform: translateX(-80%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.5;
+  }
+  85% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateX(80%);
+    opacity: 0;
+  }
+}
+
+@keyframes river-bed-pulse {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(1.06);
+  }
+}
+
+@keyframes river-wave-bob {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(5px);
+  }
+}
+
+@keyframes river-ripple-slide {
+  0% {
+    transform: translateX(-30%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(380%);
+    opacity: 0;
+  }
+}
+
+.hero-river {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: min(42vh, 360px);
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 1;
+  mask-image: linear-gradient(to top, #000 40%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, #000 40%, transparent 100%);
+}
+
+.hero-river__bed {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(140, 168, 200, 0.2) 0%,
+    rgba(120, 152, 188, 0.45) 50%,
+    rgba(105, 138, 175, 0.65) 100%
+  );
+  transform-origin: 50% 100%;
+  animation: river-bed-pulse 2.8s ease-in-out infinite alternate;
+}
+
+.hero-river__layers {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-river__layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+}
+
+.hero-river__layer--back {
+  bottom: 0;
+  height: 52%;
+}
+
+.hero-river__layer--mid {
+  bottom: 0;
+  height: 62%;
+}
+
+.hero-river__layer--front {
+  bottom: 0;
+  height: 72%;
+}
+
+.hero-river__track {
+  display: flex;
+  width: 200%;
+  height: 100%;
+  will-change: transform;
+}
+
+/* CSS loop — always on (no JS required) */
+.hero-river__layer--back .hero-river__track {
+  animation: river-scroll-slow 18s linear infinite;
+}
+
+.hero-river__layer--mid .hero-river__track {
+  animation: river-scroll-mid 11s linear infinite;
+}
+
+.hero-river__layer--front .hero-river__track {
+  animation: river-scroll-fast 6.5s linear infinite;
+}
+
+.hero-river__wave--shine {
+  animation: river-wave-bob 2.2s ease-in-out infinite alternate;
+}
+
+.hero-river__svg {
+  flex: 0 0 50%;
+  width: 50%;
+  height: 100%;
+  display: block;
+}
+
+.hero-river__wave {
+  transform-origin: 50% 100%;
+}
+
+.hero-river__shimmer {
+  position: absolute;
+  left: -30%;
+  top: 22%;
+  width: 55%;
+  height: 18%;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.35) 48%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0.35) 52%,
+    transparent 65%
+  );
+  pointer-events: none;
+  animation: river-shimmer-pass 5s ease-in-out infinite;
+}
+
+.hero-river__ripples {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 12%;
+  height: 45%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-river__ripple {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 20%;
+  max-width: 160px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.9),
+    transparent
+  );
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: river-ripple-slide 2.6s linear infinite;
+}
+
+.hero-river__ripple:nth-child(1) {
+  top: 28%;
+  animation-delay: 0s;
+}
+.hero-river__ripple:nth-child(2) {
+  top: 42%;
+  width: 14%;
+  animation-delay: 0.45s;
+}
+.hero-river__ripple:nth-child(3) {
+  top: 55%;
+  width: 24%;
+  animation-delay: 0.9s;
+}
+.hero-river__ripple:nth-child(4) {
+  top: 38%;
+  width: 16%;
+  animation-delay: 1.35s;
+}
+.hero-river__ripple:nth-child(5) {
+  top: 62%;
+  width: 18%;
+  animation-delay: 1.8s;
+}
+.hero-river__ripple:nth-child(6) {
+  top: 48%;
+  width: 12%;
+  animation-delay: 2.25s;
+}
+
+.hero-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 85%,
+    rgba(255, 255, 255, 0.35),
+    transparent 70%
+  );
+}
+
+.landing .explore-btn {
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-river__track,
+  .hero-river__shimmer {
+    animation: none;
+  }
+
+  .hero-river__ripple {
+    opacity: 0;
+  }
+
+  .hero-kim-wrap,
+  .hero-img--kim {
+    opacity: 1;
+    transform: none;
+  }
+
+  .hero-glow {
+    opacity: 0.7;
+  }
+
+  .landing .explore-btn {
+    opacity: 1;
+    transform: none;
+  }
+}
