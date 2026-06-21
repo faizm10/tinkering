@@ -312,6 +312,42 @@ export const googleAnalyticsDailyMetrics = pgTable(
   ],
 );
 
+export const posthogConnections = pgTable(
+  "posthog_connections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => analyticsProjects.id, { onDelete: "cascade" }),
+    host: varchar("host", { length: 255 }).notNull().default("https://us.posthog.com"),
+    posthogProjectId: varchar("posthog_project_id", { length: 64 }).notNull(),
+    encryptedPersonalApiKey: text("encrypted_personal_api_key").notNull(),
+    status: varchar("status", { length: 32 }).notNull().default("pending"),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    lastError: text("last_error"),
+    ...timestamps,
+  },
+  (table) => [uniqueIndex("posthog_project_idx").on(table.projectId)],
+);
+
+export const vercelAnalyticsConnections = pgTable(
+  "vercel_analytics_connections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => analyticsProjects.id, { onDelete: "cascade" }),
+    vercelProjectId: varchar("vercel_project_id", { length: 128 }).notNull(),
+    vercelTeamId: varchar("vercel_team_id", { length: 128 }),
+    encryptedToken: text("encrypted_token").notNull(),
+    status: varchar("status", { length: 32 }).notNull().default("pending"),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    lastError: text("last_error"),
+    ...timestamps,
+  },
+  (table) => [uniqueIndex("vercel_analytics_project_idx").on(table.projectId)],
+);
+
 export const googleAnalyticsSyncRuns = pgTable(
   "google_analytics_sync_runs",
   {
