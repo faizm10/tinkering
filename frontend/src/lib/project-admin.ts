@@ -17,6 +17,25 @@ export async function getRouteUserId() {
   return userId;
 }
 
+export async function listUserRepositories(clerkUserId: string) {
+  if (!hasDatabase()) return [];
+  const db = getDatabase();
+  return db
+    .select({
+      id: repositories.id,
+      name: repositories.name,
+      fullName: repositories.fullName,
+      private: repositories.private,
+      archived: repositories.archived,
+      selected: repositories.selected,
+    })
+    .from(repositories)
+    .innerJoin(githubInstallations, eq(githubInstallations.id, repositories.installationId))
+    .innerJoin(dashboardAccounts, eq(dashboardAccounts.id, githubInstallations.accountId))
+    .where(eq(dashboardAccounts.clerkUserId, clerkUserId))
+    .orderBy(repositories.fullName);
+}
+
 export async function findOwnedRepository(clerkUserId: string, slugOrFullName: string) {
   const db = getDatabase();
   const [repository] = await db
