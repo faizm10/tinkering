@@ -16,8 +16,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const content = (
-    <html lang="en" className={`dark ${geist.variable} ${geistMono.variable}`}>
-      <body className="bg-background font-sans text-foreground antialiased">{children}</body>
+    <html
+      lang="en"
+      className={`dark ${geist.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body
+        className="bg-background font-sans text-foreground antialiased"
+        suppressHydrationWarning
+      >
+        {children}
+      </body>
     </html>
   );
 
