@@ -1,64 +1,21 @@
-import { Filter } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getEvents } from "@/lib/data";
-import { formatRelative } from "@/lib/utils";
+import { EventsTable } from "@/components/events-table";
+import { getEvents, getRepository } from "@/lib/data";
 
-export default async function EventsPage({
-  params,
-}: {
-  params: Promise<{ repo: string }>;
-}) {
+export default async function EventsPage({ params }: { params: Promise<{ repo: string }> }) {
   const { repo } = await params;
-  const events = await getEvents(repo);
+  const [repository, events] = await Promise.all([getRepository(repo), getEvents(repo)]);
+  const settingsHref =
+    repository?.status !== "live" ? `/dashboard/${repo}/settings` : undefined;
 
   return (
     <Card>
-      <CardHeader className="flex-row items-center justify-between">
-        <div>
-          <CardTitle>Event stream</CardTitle>
-          <CardDescription>Recent page views and custom events retained for 90 days.</CardDescription>
-        </div>
-        <Button variant="outline" size="sm">
-          <Filter className="size-4" />
-          Filter
-        </Button>
+      <CardHeader>
+        <CardTitle>Events</CardTitle>
+        <CardDescription>Recent product events with user, path, and property context.</CardDescription>
       </CardHeader>
-      <CardContent className="px-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="pl-5">Event</TableHead>
-              <TableHead>User</TableHead>
-              <TableHead>Path</TableHead>
-              <TableHead>Properties</TableHead>
-              <TableHead className="pr-5 text-right">Time</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {events.map((event) => (
-              <TableRow key={event.id}>
-                <TableCell className="pl-5">
-                  <Badge variant={event.name === "$pageview" ? "secondary" : "outline"} className="font-mono">
-                    {event.name}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-mono text-xs">{event.displayId}</TableCell>
-                <TableCell className="max-w-48 truncate text-muted-foreground">
-                  {event.path ?? "server"}
-                </TableCell>
-                <TableCell className="max-w-64 truncate font-mono text-[11px] text-muted-foreground">
-                  {JSON.stringify(event.properties)}
-                </TableCell>
-                <TableCell className="pr-5 text-right text-muted-foreground">
-                  {formatRelative(event.occurredAt)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <CardContent className="space-y-4">
+        <EventsTable events={events} settingsHref={settingsHref} />
       </CardContent>
     </Card>
   );
