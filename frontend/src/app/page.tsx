@@ -294,6 +294,11 @@ export default function HomePage() {
 function DashboardPreview() {
   return (
     <div className="relative mx-auto mt-20 max-w-6xl">
+      <div className="mb-3 flex justify-center">
+        <Badge variant="outline" className="border-border/60 bg-background/60 text-muted-foreground">
+          Illustrative preview — open the live demo for real sample data
+        </Badge>
+      </div>
       <div className="absolute -inset-12 -z-10 rounded-full bg-primary/[0.06] blur-3xl" />
       <div className="absolute -inset-1 -z-10 rounded-2xl bg-gradient-to-b from-primary/10 to-transparent blur-xl" />
       <Card className="overflow-hidden border-border/50 bg-card shadow-2xl shadow-black/50 ring-1 ring-border/30">
