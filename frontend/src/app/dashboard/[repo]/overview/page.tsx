@@ -1,8 +1,13 @@
-import { Activity, Eye, MousePointerClick, Users } from "lucide-react";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { Activity, BarChart3, Eye, Users } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
-import { TrendChart } from "@/components/trend-chart";
+import { MetricsPeriodNote } from "@/components/metrics-period-note";
+import { RepositoryChart } from "@/components/repository-chart";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getEventBreakdown, getRepository, getTrend } from "@/lib/data";
+import { computePeriodChange } from "@/lib/metrics";
 import { formatNumber } from "@/lib/utils";
 
 export default async function OverviewPage({
@@ -16,68 +21,105 @@ export default async function OverviewPage({
     getTrend(repo),
     getEventBreakdown(repo),
   ]);
-  if (!repository) return null;
+
+  if (!repository) notFound();
+
+  const userChange = computePeriodChange(trend, "users");
+  const sessionChange = computePeriodChange(trend, "sessions");
+  const eventChange = computePeriodChange(trend, "events");
+  const showPageviews =
+    repository.analyticsSource === "google-analytics" || repository.pageviews !== undefined;
+  const pageviewChange = showPageviews ? computePeriodChange(trend, "pageviews") : undefined;
+
+  const metricChanges = [userChange, sessionChange, eventChange, pageviewChange];
+  const settingsHref = repository.status !== "live" ? `/dashboard/${repo}/settings` : undefined;
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Active users" value={repository.activeUsers} change={18.4} icon={Users} />
-        <MetricCard label="Sessions" value={repository.sessions} change={12.1} icon={MousePointerClick} />
-        <MetricCard label="Events" value={repository.events} change={21.7} icon={Activity} />
-        <MetricCard
-          label="Page views"
-          value={repository.pageviews ?? Math.round(repository.events * 0.56)}
-          change={9.6}
-          icon={Eye}
-        />
+      <div
+        className={`grid gap-4 md:grid-cols-2 ${showPageviews ? "xl:grid-cols-4" : "xl:grid-cols-3"}`}
+      >
+        <MetricCard label="Users" value={repository.activeUsers} change={userChange} icon={Users} />
+        <MetricCard label="Sessions" value={repository.sessions} change={sessionChange} icon={Activity} />
+        <MetricCard label="Events" value={repository.events} change={eventChange} icon={BarChart3} />
+        {showPageviews ? (
+          <MetricCard
+            label="Page views"
+            value={repository.pageviews ?? 0}
+            change={pageviewChange}
+            icon={Eye}
+          />
+        ) : null}
       </div>
-      <div className="grid gap-6 xl:grid-cols-[1.65fr_0.85fr]">
+
+      <MetricsPeriodNote trend={trend} changes={metricChanges} />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Usage trend</CardTitle>
+          <CardDescription>Daily users, sessions, and events for the last 30 days.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RepositoryChart data={trend} />
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader className="flex-row items-center justify-between">
-            <div>
-              <CardTitle>Active users</CardTitle>
-              <CardDescription>Unique anonymous and identified visitors over 30 days.</CardDescription>
-            </div>
-            <p className="font-mono text-xl font-semibold">{formatNumber(repository.activeUsers)}</p>
+          <CardHeader>
+            <CardTitle>Top events</CardTitle>
+            <CardDescription>Most frequent event names in the retention window.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <TrendChart data={trend} />
+          <CardContent className="space-y-3">
+            {breakdown.topEvents.length === 0 ? (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  No events yet. Install the SDK or connect Google Analytics to populate this chart.
+                </p>
+                {settingsHref ? (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={settingsHref}>Open settings</Link>
+                  </Button>
+                ) : null}
+              </div>
+            ) : (
+              breakdown.topEvents.map((item) => (
+                <div key={item.name} className="flex items-center justify-between gap-4 text-sm">
+                  <span className="truncate font-mono">{item.name}</span>
+                  <span className="font-mono text-muted-foreground">{formatNumber(item.count)}</span>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Top events</CardTitle>
-            <CardDescription>Most common product actions.</CardDescription>
+            <CardTitle>Top referrers</CardTitle>
+            <CardDescription>Where sessions originated.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5">
-            {breakdown.topEvents.map((event) => (
-              <div key={event.name}>
-                <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="font-mono text-xs">{event.name}</span>
-                  <span className="text-muted-foreground">{formatNumber(event.count)}</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-secondary">
-                  <div className="h-full rounded-full bg-primary" style={{ width: `${event.share}%` }} />
-                </div>
+          <CardContent className="space-y-3">
+            {breakdown.referrers.length === 0 ? (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Referrer data appears once browser sessions include a referrer URL.
+                </p>
+                {settingsHref ? (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={settingsHref}>Open settings</Link>
+                  </Button>
+                ) : null}
               </div>
-            ))}
+            ) : (
+              breakdown.referrers.map((item) => (
+                <div key={item.name} className="flex items-center justify-between gap-4 text-sm">
+                  <span className="truncate">{item.name}</span>
+                  <span className="font-mono text-muted-foreground">{formatNumber(item.count)}</span>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Acquisition</CardTitle>
-          <CardDescription>Top referrers for first sessions.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {breakdown.referrers.map((referrer) => (
-            <div key={referrer.name} className="rounded-lg border border-border bg-secondary/25 p-4">
-              <p className="text-sm text-muted-foreground">{referrer.name}</p>
-              <p className="mt-3 font-mono text-2xl font-semibold">{formatNumber(referrer.count)}</p>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
     </div>
   );
 }
