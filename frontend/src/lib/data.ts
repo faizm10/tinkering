@@ -15,15 +15,26 @@ import {
   demoTopEvents,
   demoTrend,
   demoUsers,
+  isDemoSetupRepository,
   type EventSummary,
   type ProductUserSummary,
   type RepositorySummary,
   type TrendPoint,
 } from "./demo-data";
+import { clerkConfigured } from "./auth";
 import { getGoogleAnalyticsMetricsForRepository } from "./google-analytics-admin";
 
+function useDemoFallback() {
+  return !hasDatabase() && !clerkConfigured;
+}
+
+function demoRepositoryHasNoData(slug: string) {
+  return useDemoFallback() && isDemoSetupRepository(slug);
+}
+
 export async function getPortfolio(): Promise<RepositorySummary[]> {
-  if (!hasDatabase()) return demoRepositories;
+  if (useDemoFallback()) return demoRepositories;
+  if (!hasDatabase()) return [];
 
   try {
     const db = getDatabase();
@@ -51,8 +62,24 @@ export async function getPortfolio(): Promise<RepositorySummary[]> {
       .groupBy(repositories.id, analyticsProjects.id)
       .orderBy(desc(sql`coalesce(sum(${dailyAggregates.events}), 0)`));
 
+    const lastEventRows = await db
+      .select({
+        slug: repositories.name,
+        lastEventAt: sql<Date | null>`max(${events.occurredAt})`,
+      })
+      .from(events)
+      .innerJoin(analyticsProjects, eq(analyticsProjects.id, events.projectId))
+      .innerJoin(repositories, eq(repositories.id, analyticsProjects.repositoryId))
+      .where(eq(repositories.selected, true))
+      .groupBy(repositories.name);
+
+    const lastEventBySlug = new Map(
+      lastEventRows.map((row) => [row.slug, row.lastEventAt?.toISOString() ?? null]),
+    );
+
     return Promise.all(
       rows.map(async (row) => {
+        const lastEventAt = lastEventBySlug.get(row.slug) ?? null;
         const googleMetrics = await getGoogleAnalyticsMetricsForRepository(row.slug);
         if (googleMetrics) {
           const totals = googleMetrics.reduce(
@@ -73,6 +100,7 @@ export async function getPortfolio(): Promise<RepositorySummary[]> {
             change: 0,
             status: "live" as const,
             analyticsSource: "google-analytics" as const,
+            lastEventAt,
           };
         }
 
@@ -87,12 +115,13 @@ export async function getPortfolio(): Promise<RepositorySummary[]> {
           change: 0,
           status: row.projectId ? ("live" as const) : ("setup" as const),
           analyticsSource: "native" as const,
+          lastEventAt,
         };
       }),
     );
   } catch (error) {
     console.error("portfolio_query_failed", { error });
-    return demoRepositories;
+    return [];
   }
 }
 
@@ -102,7 +131,9 @@ export async function getRepository(slug: string) {
 }
 
 export async function getTrend(slug: string): Promise<TrendPoint[]> {
-  if (!hasDatabase()) return demoTrend;
+  if (demoRepositoryHasNoData(slug)) return [];
+  if (useDemoFallback()) return demoTrend;
+  if (!hasDatabase()) return [];
 
   try {
     const googleMetrics = await getGoogleAnalyticsMetricsForRepository(slug);
@@ -147,12 +178,53 @@ export async function getTrend(slug: string): Promise<TrendPoint[]> {
     }));
   } catch (error) {
     console.error("trend_query_failed", { error });
-    return demoTrend;
+    return [];
+  }
+}
+
+export async function getPortfolioTrend(): Promise<TrendPoint[]> {
+  if (useDemoFallback()) return demoTrend;
+  if (!hasDatabase()) return [];
+
+  try {
+    const db = getDatabase();
+    const rows = await db
+      .select({
+        day: dailyAggregates.day,
+        users: sql<number>`coalesce(sum(${dailyAggregates.activeVisitors}), 0)::int`,
+        sessions: sql<number>`coalesce(sum(${dailyAggregates.sessions}), 0)::int`,
+        events: sql<number>`coalesce(sum(${dailyAggregates.events}), 0)::int`,
+      })
+      .from(dailyAggregates)
+      .innerJoin(analyticsProjects, eq(analyticsProjects.id, dailyAggregates.projectId))
+      .innerJoin(repositories, eq(repositories.id, analyticsProjects.repositoryId))
+      .where(
+        and(
+          eq(repositories.selected, true),
+          gte(dailyAggregates.day, sql`current_date - interval '30 days'`),
+        ),
+      )
+      .groupBy(dailyAggregates.day)
+      .orderBy(dailyAggregates.day);
+
+    return rows.map((row) => ({
+      day: new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(
+        new Date(`${row.day}T00:00:00Z`),
+      ),
+      users: row.users,
+      sessions: row.sessions,
+      events: row.events,
+    }));
+  } catch (error) {
+    console.error("portfolio_trend_query_failed", { error });
+    return [];
   }
 }
 
 export async function getUsers(slug: string): Promise<ProductUserSummary[]> {
-  if (!hasDatabase()) return demoUsers;
+  if (demoRepositoryHasNoData(slug)) return [];
+  if (useDemoFallback()) return demoUsers;
+  if (!hasDatabase()) return [];
 
   try {
     const db = getDatabase();
@@ -187,12 +259,14 @@ export async function getUsers(slug: string): Promise<ProductUserSummary[]> {
     }));
   } catch (error) {
     console.error("users_query_failed", { error });
-    return demoUsers;
+    return [];
   }
 }
 
 export async function getEvents(slug: string): Promise<EventSummary[]> {
-  if (!hasDatabase()) return demoEvents;
+  if (demoRepositoryHasNoData(slug)) return [];
+  if (useDemoFallback()) return demoEvents;
+  if (!hasDatabase()) return [];
 
   try {
     const db = getDatabase();
@@ -223,7 +297,54 @@ export async function getEvents(slug: string): Promise<EventSummary[]> {
     }));
   } catch (error) {
     console.error("events_query_failed", { error });
-    return demoEvents;
+    return [];
+  }
+}
+
+export async function getUserTimeline(
+  slug: string,
+  userId: string,
+): Promise<EventSummary[]> {
+  if (demoRepositoryHasNoData(slug)) return [];
+  if (useDemoFallback()) {
+    const user = demoUsers.find((entry) => entry.id === userId);
+    if (!user) return [];
+    return demoEvents
+      .filter((event) => event.displayId === user.displayId)
+      .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+  }
+  if (!hasDatabase()) return [];
+
+  try {
+    const db = getDatabase();
+    const rows = await db
+      .select({
+        id: events.id,
+        name: events.name,
+        displayId: productUsers.displayId,
+        occurredAt: events.occurredAt,
+        path: events.path,
+        properties: events.properties,
+      })
+      .from(events)
+      .innerJoin(analyticsProjects, eq(analyticsProjects.id, events.projectId))
+      .innerJoin(repositories, eq(repositories.id, analyticsProjects.repositoryId))
+      .innerJoin(productUsers, eq(productUsers.id, events.productUserId))
+      .where(and(eq(repositories.name, slug), eq(productUsers.id, userId)))
+      .orderBy(desc(events.occurredAt))
+      .limit(50);
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      displayId: row.displayId,
+      occurredAt: row.occurredAt.toISOString(),
+      path: row.path,
+      properties: row.properties,
+    }));
+  } catch (error) {
+    console.error("user_timeline_query_failed", { error });
+    return [];
   }
 }
 
@@ -254,5 +375,67 @@ export async function getEventBreakdown(slug: string) {
         .map(([name, count]) => ({ name, count })),
     };
   }
-  return { topEvents: demoTopEvents, referrers: demoReferrers };
+  if (demoRepositoryHasNoData(slug)) {
+    return { topEvents: [], referrers: [] };
+  }
+  if (useDemoFallback()) {
+    return { topEvents: demoTopEvents, referrers: demoReferrers };
+  }
+  if (!hasDatabase()) {
+    return { topEvents: [], referrers: [] };
+  }
+
+  try {
+    const db = getDatabase();
+    const eventRows = await db
+      .select({
+        name: events.name,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(events)
+      .innerJoin(analyticsProjects, eq(analyticsProjects.id, events.projectId))
+      .innerJoin(repositories, eq(repositories.id, analyticsProjects.repositoryId))
+      .where(
+        and(
+          eq(repositories.name, slug),
+          gte(events.occurredAt, sql`now() - interval '30 days'`),
+        ),
+      )
+      .groupBy(events.name)
+      .orderBy(sql`count(*) desc`)
+      .limit(5);
+
+    const referrerRows = await db
+      .select({
+        name: sessions.referrer,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(sessions)
+      .innerJoin(analyticsProjects, eq(analyticsProjects.id, sessions.projectId))
+      .innerJoin(repositories, eq(repositories.id, analyticsProjects.repositoryId))
+      .where(
+        and(
+          eq(repositories.name, slug),
+          gte(sessions.startedAt, sql`now() - interval '30 days'`),
+        ),
+      )
+      .groupBy(sessions.referrer)
+      .orderBy(sql`count(*) desc`)
+      .limit(4);
+
+    const largestEvent = eventRows[0]?.count ?? 1;
+    return {
+      topEvents: eventRows.map((row) => ({
+        name: row.name,
+        count: row.count,
+        share: Math.round((row.count / largestEvent) * 100),
+      })),
+      referrers: referrerRows
+        .filter((row) => row.name)
+        .map((row) => ({ name: row.name as string, count: row.count })),
+    };
+  } catch (error) {
+    console.error("breakdown_query_failed", { error });
+    return { topEvents: [], referrers: [] };
+  }
 }
