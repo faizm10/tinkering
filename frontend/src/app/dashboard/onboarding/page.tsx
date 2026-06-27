@@ -10,7 +10,12 @@ export default async function OnboardingPage({
 }) {
   const params = await searchParams;
   const viewer = await requireViewer();
-  const repos = hasDatabase() ? await listUserRepositories(viewer.id) : [];
+  const workspaceMode: "live" | "demo" | "needs-db" = viewer.isDemo
+    ? "demo"
+    : !hasDatabase()
+      ? "needs-db"
+      : "live";
+  const repos = workspaceMode === "live" ? await listUserRepositories(viewer.id) : [];
 
   const installUrl = process.env.GITHUB_APP_SLUG
     ? "/api/github/install"
@@ -22,6 +27,7 @@ export default async function OnboardingPage({
       installUrl={installUrl}
       initialError={params.error ?? null}
       initiallyConnected={params.installation === "connected"}
+      workspaceMode={workspaceMode}
     />
   );
 }
