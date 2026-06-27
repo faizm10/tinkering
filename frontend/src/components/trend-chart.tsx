@@ -1,17 +1,39 @@
 import type { TrendPoint } from "@/lib/demo-data";
 
-export function TrendChart({ data }: { data: TrendPoint[] }) {
+export type TrendMetric = "users" | "sessions" | "events" | "pageviews";
+
+const metricLabels: Record<TrendMetric, string> = {
+  users: "Active users over the last 30 days",
+  sessions: "Sessions over the last 30 days",
+  events: "Events over the last 30 days",
+  pageviews: "Page views over the last 30 days",
+};
+
+function readMetric(point: TrendPoint, metric: TrendMetric) {
+  if (metric === "pageviews") return point.pageviews ?? 0;
+  return point[metric];
+}
+
+export function TrendChart({
+  data,
+  metric = "users",
+  gradientId = "trend-fill",
+}: {
+  data: TrendPoint[];
+  metric?: TrendMetric;
+  gradientId?: string;
+}) {
   const width = 800;
   const height = 220;
   const padding = 18;
-  const values = data.map((point) => point.users);
+  const values = data.map((point) => readMetric(point, metric));
   const min = Math.min(...values) * 0.9;
   const max = Math.max(...values) * 1.05;
   const range = Math.max(max - min, 1);
   const points = data
     .map((point, index) => {
       const x = padding + (index / Math.max(data.length - 1, 1)) * (width - padding * 2);
-      const y = height - padding - ((point.users - min) / range) * (height - padding * 2);
+      const y = height - padding - ((readMetric(point, metric) - min) / range) * (height - padding * 2);
       return `${x},${y}`;
     })
     .join(" ");
@@ -23,10 +45,10 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
         viewBox={`0 0 ${width} ${height}`}
         className="h-[220px] w-full overflow-visible"
         role="img"
-        aria-label="Active users over the last 30 days"
+        aria-label={metricLabels[metric]}
       >
         <defs>
-          <linearGradient id="trend-fill" x1="0" x2="0" y1="0" y2="1">
+          <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.28" />
             <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
           </linearGradient>
@@ -42,7 +64,7 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
             strokeDasharray="4 7"
           />
         ))}
-        <polygon points={area} fill="url(#trend-fill)" />
+        <polygon points={area} fill={`url(#${gradientId})`} />
         <polyline
           points={points}
           fill="none"
