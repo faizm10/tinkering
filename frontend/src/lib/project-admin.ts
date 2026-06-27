@@ -156,6 +156,42 @@ export async function rotateProjectKey({
   return key;
 }
 
+export async function getProjectInstallSettings(clerkUserId: string, repositorySlug: string) {
+  if (!hasDatabase()) {
+    return {
+      allowedOrigins: ["http://localhost:3000"],
+      publicKeyPrefix: `rp_pub_${repositorySlug}`,
+    };
+  }
+
+  const repository = await findOwnedRepository(clerkUserId, repositorySlug);
+  if (!repository?.projectId) return null;
+
+  const db = getDatabase();
+  const [project] = await db
+    .select({ allowedOrigins: analyticsProjects.allowedOrigins })
+    .from(analyticsProjects)
+    .where(eq(analyticsProjects.id, repository.projectId))
+    .limit(1);
+
+  const [publicKey] = await db
+    .select({ prefix: trackingKeys.prefix })
+    .from(trackingKeys)
+    .where(
+      and(
+        eq(trackingKeys.projectId, repository.projectId),
+        eq(trackingKeys.kind, "public"),
+        isNull(trackingKeys.revokedAt),
+      ),
+    )
+    .limit(1);
+
+  return {
+    allowedOrigins: project?.allowedOrigins ?? [],
+    publicKeyPrefix: publicKey?.prefix ?? `rp_pub_${repository.name}`,
+  };
+}
+
 export async function updateProjectOrigins({
   clerkUserId,
   repositorySlug,
