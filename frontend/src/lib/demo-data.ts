@@ -18,6 +18,7 @@ export type RepositorySummary = {
   change: number;
   status: "live" | "setup";
   analyticsSource?: "native" | "google-analytics";
+  lastEventAt?: string | null;
 };
 
 export type ProductUserSummary = {
@@ -54,6 +55,7 @@ export const demoRepositories: RepositorySummary[] = [
     events: 18430,
     change: 18.4,
     status: "live",
+    lastEventAt: hoursAgo(0.2),
   },
   {
     id: "repo_shipkit",
@@ -65,6 +67,7 @@ export const demoRepositories: RepositorySummary[] = [
     events: 6541,
     change: 8.1,
     status: "live",
+    lastEventAt: hoursAgo(1.1),
   },
   {
     id: "repo_lens",
@@ -76,6 +79,7 @@ export const demoRepositories: RepositorySummary[] = [
     events: 2821,
     change: -2.3,
     status: "live",
+    lastEventAt: hoursAgo(3.8),
   },
   {
     id: "repo_launchpad",
@@ -231,3 +235,7 @@ export const demoReferrers = [
   { name: "google.com", count: 186 },
   { name: "vercel.com", count: 55 },
 ];
+
+export function isDemoSetupRepository(slug: string): boolean {
+  return demoRepositories.find((repository) => repository.slug === slug)?.status === "setup";
+}
