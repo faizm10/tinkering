@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { RepositoryNav } from "@/components/repository-nav";
+import { SetupBanner } from "@/components/setup-banner";
 import { getRepository } from "@/lib/data";
 
 export default async function RepositoryLayout({
@@ -14,8 +15,11 @@ export default async function RepositoryLayout({
   if (!repository) notFound();
 
   return (
-    <div>
+    <div className="space-y-6">
       <RepositoryNav repository={repository} />
+      {repository.status !== "live" ? (
+        <SetupBanner repoSlug={repo} repositoryName={repository.fullName} />
+      ) : null}
       {children}
     </div>
   );
