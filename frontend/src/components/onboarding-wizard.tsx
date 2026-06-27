@@ -40,6 +40,63 @@ type AnalyticsSource = "sdk" | "google-analytics" | "posthog" | "vercel";
 
 type Step = 1 | 2 | 3;
 
+type WorkspaceMode = "live" | "demo" | "needs-db";
+
+function OnboardingBlockedState({ mode }: { mode: Exclude<WorkspaceMode, "live"> }) {
+  if (mode === "demo") {
+    return (
+      <div className="rounded-2xl border border-border/60 bg-card/50 p-6 sm:p-8">
+        <div className="flex items-start gap-3">
+          <Github className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+          <div className="space-y-3">
+            <div>
+              <h2 className="text-lg font-semibold">Sign in to connect GitHub</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                You are browsing the demo workspace with sample data. To install the GitHub App and
+                track a real repository, create an account and connect GitHub.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild>
+                <Link href="/sign-up">Create account</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/dashboard">Explore demo dashboard</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/50 p-6 sm:p-8">
+      <div className="flex items-start gap-3">
+        <Lock className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold">Database required</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              RepoPulse needs a Postgres connection before it can store projects, API keys, and
+              ingested events. Add your database URL in settings, then return here to connect a
+              repository.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link href="/dashboard/settings">Open settings</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/dashboard">Back to portfolio</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const SOURCES: { id: AnalyticsSource; label: string; description: string; icon: React.ElementType }[] = [
   {
     id: "sdk",
@@ -353,7 +410,14 @@ function AnalyticsStep({
   onBack: () => void;
 }) {
   const [source, setSource] = useState<AnalyticsSource | null>(null);
+  const [sourceConnected, setSourceConnected] = useState(false);
   const repoSlug = project.repository.split("/").at(-1) ?? project.repository;
+  const analyticsReady = source === "sdk" || sourceConnected;
+
+  function selectSource(next: AnalyticsSource) {
+    setSource(next);
+    setSourceConnected(false);
+  }
 
   return (
     <div className="space-y-6">
@@ -371,7 +435,7 @@ function AnalyticsStep({
           <button
             key={s.id}
             type="button"
-            onClick={() => setSource(s.id)}
+            onClick={() => selectSource(s.id)}
             className={`rounded-xl border p-4 text-left transition-all ${
               source === s.id
                 ? "border-primary/40 bg-primary/8 ring-1 ring-primary/20"
@@ -397,20 +461,49 @@ function AnalyticsStep({
       </div>
 
       {source === "sdk" && <SdkConfig project={project} repoSlug={repoSlug} />}
-      {source === "google-analytics" && <GoogleAnalyticsConfig repoSlug={repoSlug} />}
-      {source === "posthog" && <PosthogConfig repoSlug={repoSlug} />}
-      {source === "vercel" && <VercelConfig repoSlug={repoSlug} />}
+      {source === "google-analytics" && (
+        <GoogleAnalyticsConfig repoSlug={repoSlug} onConnected={() => setSourceConnected(true)} />
+      )}
+      {source === "posthog" && (
+        <PosthogConfig repoSlug={repoSlug} onConnected={() => setSourceConnected(true)} />
+      )}
+      {source === "vercel" && (
+        <VercelConfig repoSlug={repoSlug} onConnected={() => setSourceConnected(true)} />
+      )}
 
-      <div className="flex items-center justify-between border-t border-border/50 pt-4">
+      {source && source !== "sdk" && !sourceConnected ? (
+        <p className="text-sm text-amber-400/90">
+          Connect {SOURCES.find((item) => item.id === source)?.label ?? "your source"} before
+          opening the dashboard, or skip and finish setup later in repository settings.
+        </p>
+      ) : null}
+
+      {!source ? (
+        <p className="text-sm text-muted-foreground">
+          Pick an analytics source above. The browser SDK is ready immediately; imports need a
+          quick connection step first.
+        </p>
+      ) : null}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/50 pt-4">
         <Button variant="outline" onClick={onBack}>
           Back
         </Button>
-        <Button asChild>
-          <Link href={`/dashboard/${repoSlug}/overview`}>
-            Open dashboard
-            <ArrowRight className="size-4" />
-          </Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="ghost" size="sm">
+            <Link href={`/dashboard/${repoSlug}/overview`}>Skip for now</Link>
+          </Button>
+          {source && analyticsReady ? (
+            <Button asChild>
+              <Link href={`/dashboard/${repoSlug}/overview`}>
+                Open dashboard
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          ) : (
+            <Button disabled>Open dashboard</Button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -463,7 +556,13 @@ function SdkConfig({ project, repoSlug }: { project: CreatedProject; repoSlug: s
   );
 }
 
-function GoogleAnalyticsConfig({ repoSlug }: { repoSlug: string }) {
+function GoogleAnalyticsConfig({
+  repoSlug,
+  onConnected,
+}: {
+  repoSlug: string;
+  onConnected?: () => void;
+}) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
@@ -489,6 +588,7 @@ function GoogleAnalyticsConfig({ repoSlug }: { repoSlug: string }) {
         return;
       }
       setConnected(true);
+      onConnected?.();
     } finally {
       setPending(false);
     }
@@ -541,7 +641,13 @@ function GoogleAnalyticsConfig({ repoSlug }: { repoSlug: string }) {
   );
 }
 
-function PosthogConfig({ repoSlug }: { repoSlug: string }) {
+function PosthogConfig({
+  repoSlug,
+  onConnected,
+}: {
+  repoSlug: string;
+  onConnected?: () => void;
+}) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
@@ -567,6 +673,7 @@ function PosthogConfig({ repoSlug }: { repoSlug: string }) {
         return;
       }
       setConnected(true);
+      onConnected?.();
     } finally {
       setPending(false);
     }
@@ -628,7 +735,13 @@ function PosthogConfig({ repoSlug }: { repoSlug: string }) {
   );
 }
 
-function VercelConfig({ repoSlug }: { repoSlug: string }) {
+function VercelConfig({
+  repoSlug,
+  onConnected,
+}: {
+  repoSlug: string;
+  onConnected?: () => void;
+}) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
@@ -654,6 +767,7 @@ function VercelConfig({ repoSlug }: { repoSlug: string }) {
         return;
       }
       setConnected(true);
+      onConnected?.();
     } finally {
       setPending(false);
     }
@@ -728,12 +842,29 @@ export function OnboardingWizard({
   installUrl,
   initialError,
   initiallyConnected,
+  workspaceMode = "live",
 }: {
   repos: Repo[];
   installUrl: string;
   initialError?: string | null;
   initiallyConnected?: boolean;
+  workspaceMode?: WorkspaceMode;
 }) {
+  if (workspaceMode !== "live") {
+    return (
+      <div className="mx-auto max-w-3xl space-y-8">
+        <div>
+          <Badge variant="outline">Onboarding</Badge>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Connect a repository</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Set up analytics for a GitHub repository in a few steps.
+          </p>
+        </div>
+        <OnboardingBlockedState mode={workspaceMode} />
+      </div>
+    );
+  }
+
   const hasRepos = repos.length > 0;
   const [step, setStep] = useState<Step>(hasRepos && initiallyConnected ? 2 : 1);
   const [project, setProject] = useState<CreatedProject | null>(null);
