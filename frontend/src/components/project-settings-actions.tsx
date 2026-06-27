@@ -7,9 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function OriginSettings({ repository }: { repository: string }) {
+export function OriginSettings({
+  repository,
+  initialOrigins = [],
+}: {
+  repository: string;
+  initialOrigins?: string[];
+}) {
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const defaultOrigins =
+    initialOrigins.length > 0 ? initialOrigins.join(", ") : "http://localhost:3000";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,11 +40,7 @@ export function OriginSettings({ repository }: { repository: string }) {
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2">
         <Label htmlFor="origins">Origins</Label>
-        <Input
-          id="origins"
-          name="origins"
-          defaultValue="https://app.example.com, http://localhost:3000"
-        />
+        <Input id="origins" name="origins" defaultValue={defaultOrigins} />
       </div>
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={pending}>
