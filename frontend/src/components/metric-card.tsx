@@ -24,18 +24,21 @@ export function MetricCard({
         </div>
         <div className="mt-4 flex items-end justify-between gap-3">
           <p className="font-mono text-2xl font-semibold tracking-tight">{formatNumber(value)}</p>
-          {change !== undefined && (
+          {change !== undefined ? (
             <span
               className={
                 positive
-                  ? "flex items-center text-xs text-emerald-400"
-                  : "flex items-center text-xs text-rose-400"
+                  ? "flex flex-col items-end text-xs text-emerald-400"
+                  : "flex flex-col items-end text-xs text-rose-400"
               }
             >
-              {positive ? <ArrowUpRight className="size-3.5" /> : <ArrowDownRight className="size-3.5" />}
-              {Math.abs(change).toFixed(1)}%
+              <span className="flex items-center">
+                {positive ? <ArrowUpRight className="size-3.5" /> : <ArrowDownRight className="size-3.5" />}
+                {Math.abs(change).toFixed(1)}%
+              </span>
+              <span className="text-[10px] text-muted-foreground">vs prior 7d</span>
             </span>
-          )}
+          ) : null}
         </div>
       </CardContent>
     </Card>
