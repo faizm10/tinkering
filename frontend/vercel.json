@@ -1,6 +1,5 @@
 {
-  "buildCommand": "next build --no-turbopack",
-  "crons": [
+"crons": [
     {
       "path": "/api/cron/daily",
       "schedule": "15 2 * * *"

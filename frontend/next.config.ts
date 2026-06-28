@@ -10,9 +10,6 @@ const appRoot = path.dirname(fileURLToPath(import.meta.url));
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   allowedDevOrigins: ["127.0.0.1"],
-  turbopack: {
-    root: appRoot,
-  },
   outputFileTracingRoot: appRoot,
 };
 
