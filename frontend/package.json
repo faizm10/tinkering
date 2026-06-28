@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node -e \"require('fs').writeFileSync('.next/package.json', JSON.stringify({type:'commonjs'}))\"",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
