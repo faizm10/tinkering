@@ -252,7 +252,7 @@ function GitHubStep({
           </>
         ) : (
           <Button asChild onClick={onInstallClick}>
-            <a href={installUrl}>
+            <a href={installUrl} target="_blank" rel="noopener noreferrer">
               <Github className="size-4" />
               Install on GitHub
               <ExternalLink className="size-3.5" />
