@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -141,11 +141,15 @@ function GitHubStep({
   repos,
   installUrl,
   error,
+  isPolling,
+  onInstallClick,
   onContinue,
 }: {
   repos: Repo[];
   installUrl: string;
   error?: string | null;
+  isPolling: boolean;
+  onInstallClick: () => void;
   onContinue: () => void;
 }) {
   const hasRepos = repos.length > 0;
@@ -222,6 +226,16 @@ function GitHubStep({
         </div>
       )}
 
+      {isPolling && !hasRepos && (
+        <div className="flex items-center gap-2.5 rounded-lg border border-border/50 bg-card/40 px-4 py-3 text-sm text-muted-foreground">
+          <span className="relative flex size-2 shrink-0">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex size-2 rounded-full bg-primary" />
+          </span>
+          Waiting for GitHub installation… this page will advance automatically.
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         {hasRepos ? (
           <>
@@ -237,7 +251,7 @@ function GitHubStep({
             </Button>
           </>
         ) : (
-          <Button asChild>
+          <Button asChild onClick={onInstallClick}>
             <a href={installUrl}>
               <Github className="size-4" />
               Install on GitHub
@@ -810,7 +824,7 @@ function errorMessage(code: string) {
 }
 
 export function OnboardingWizard({
-  repos,
+  repos: initialRepos,
   installUrl,
   initialError,
   initiallyConnected,
@@ -837,9 +851,43 @@ export function OnboardingWizard({
     );
   }
 
+  const [repos, setRepos] = useState<Repo[]>(initialRepos);
   const hasRepos = repos.length > 0;
   const [step, setStep] = useState<Step>(hasRepos && initiallyConnected ? 2 : 1);
   const [project, setProject] = useState<CreatedProject | null>(null);
+  const [isPolling, setIsPolling] = useState(!!(initiallyConnected && !hasRepos));
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Start polling when user clicks Install on GitHub
+  function handleInstallClick() {
+    setIsPolling(true);
+  }
+
+  // Poll /api/repos while on step 1 with no repos
+  useEffect(() => {
+    if (step !== 1 || hasRepos) return;
+    if (!isPolling) return;
+
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch("/api/repos");
+        if (!res.ok) return;
+        const data = (await res.json()) as { repos: Repo[] };
+        if (data.repos.length > 0) {
+          setRepos(data.repos);
+          setStep(2);
+          setIsPolling(false);
+          if (pollRef.current) clearInterval(pollRef.current);
+        }
+      } catch {
+        // network blip — keep polling
+      }
+    }, 2000);
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [step, hasRepos, isPolling]);
 
   function handleCreated(p: CreatedProject) {
     setProject(p);
@@ -866,6 +914,8 @@ export function OnboardingWizard({
             repos={repos}
             installUrl={installUrl}
             error={initialError}
+            isPolling={isPolling}
+            onInstallClick={handleInstallClick}
             onContinue={() => setStep(2)}
           />
         )}
