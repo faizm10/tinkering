@@ -2,11 +2,18 @@ import { UserButton } from "@clerk/nextjs";
 import {
   DashboardSidebarMobileTrigger,
   DashboardSidebarProvider,
+  type SidebarProject,
 } from "@/components/dashboard-sidebar";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  projects = [],
+}: {
+  children: React.ReactNode;
+  projects?: SidebarProject[];
+}) {
   return (
-    <DashboardSidebarProvider>
+    <DashboardSidebarProvider projects={projects}>
       <div className="min-h-screen lg:pl-60">
         <div className="flex min-h-screen flex-col">
           <header className="flex h-16 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur sm:px-6">

@@ -2,7 +2,6 @@ import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { getDatabase, hasDatabase } from "@/db";
 import {
   analyticsProjects,
-  dailyAggregates,
   events,
   productUsers,
   repositories,
@@ -18,6 +17,9 @@ export async function getPortfolio(): Promise<RepositorySummary[]> {
 
   try {
     const db = getDatabase();
+    // Aggregate live from the events table (last 30 days) so freshly ingested
+    // SDK data shows immediately, rather than waiting for the daily cron to
+    // populate daily_aggregates.
     const rows = await db
       .select({
         id: repositories.id,
@@ -25,22 +27,23 @@ export async function getPortfolio(): Promise<RepositorySummary[]> {
         fullName: repositories.fullName,
         private: repositories.private,
         projectId: analyticsProjects.id,
-        activeUsers: sql<number>`coalesce(sum(${dailyAggregates.activeVisitors}), 0)::int`,
-        sessions: sql<number>`coalesce(sum(${dailyAggregates.sessions}), 0)::int`,
-        events: sql<number>`coalesce(sum(${dailyAggregates.events}), 0)::int`,
+        activeUsers: sql<number>`count(distinct ${events.visitorId})::int`,
+        sessions: sql<number>`count(distinct ${events.sessionId})::int`,
+        pageviews: sql<number>`count(*) filter (where ${events.name} = '$pageview')::int`,
+        events: sql<number>`count(${events.id})::int`,
       })
       .from(repositories)
       .leftJoin(analyticsProjects, eq(analyticsProjects.repositoryId, repositories.id))
       .leftJoin(
-        dailyAggregates,
+        events,
         and(
-          eq(dailyAggregates.projectId, analyticsProjects.id),
-          gte(dailyAggregates.day, sql`current_date - interval '30 days'`),
+          eq(events.projectId, analyticsProjects.id),
+          gte(events.occurredAt, sql`now() - interval '30 days'`),
         ),
       )
       .where(eq(repositories.selected, true))
       .groupBy(repositories.id, analyticsProjects.id)
-      .orderBy(desc(sql`coalesce(sum(${dailyAggregates.events}), 0)`));
+      .orderBy(desc(sql`count(${events.id})`));
 
     const lastEventRows = await db
       .select({
@@ -91,6 +94,7 @@ export async function getPortfolio(): Promise<RepositorySummary[]> {
           private: row.private,
           activeUsers: row.activeUsers,
           sessions: row.sessions,
+          pageviews: row.pageviews,
           events: row.events,
           change: 0,
           status: row.projectId ? ("live" as const) : ("setup" as const),
@@ -128,23 +132,26 @@ export async function getTrend(slug: string): Promise<TrendPoint[]> {
     }
 
     const db = getDatabase();
+    const dayExpr = sql<string>`(${events.occurredAt} at time zone 'UTC')::date`;
     const rows = await db
       .select({
-        day: dailyAggregates.day,
-        users: dailyAggregates.activeVisitors,
-        sessions: dailyAggregates.sessions,
-        events: dailyAggregates.events,
+        day: dayExpr,
+        users: sql<number>`count(distinct ${events.visitorId})::int`,
+        sessions: sql<number>`count(distinct ${events.sessionId})::int`,
+        pageviews: sql<number>`count(*) filter (where ${events.name} = '$pageview')::int`,
+        events: sql<number>`count(${events.id})::int`,
       })
-      .from(dailyAggregates)
-      .innerJoin(analyticsProjects, eq(analyticsProjects.id, dailyAggregates.projectId))
+      .from(events)
+      .innerJoin(analyticsProjects, eq(analyticsProjects.id, events.projectId))
       .innerJoin(repositories, eq(repositories.id, analyticsProjects.repositoryId))
       .where(
         and(
           eq(repositories.name, slug),
-          gte(dailyAggregates.day, sql`current_date - interval '30 days'`),
+          gte(events.occurredAt, sql`now() - interval '30 days'`),
         ),
       )
-      .orderBy(dailyAggregates.day);
+      .groupBy(dayExpr)
+      .orderBy(dayExpr);
 
     return rows.map((row) => ({
       day: new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(
@@ -152,6 +159,7 @@ export async function getTrend(slug: string): Promise<TrendPoint[]> {
       ),
       users: row.users,
       sessions: row.sessions,
+      pageviews: row.pageviews,
       events: row.events,
     }));
   } catch (error) {
@@ -165,24 +173,25 @@ export async function getPortfolioTrend(): Promise<TrendPoint[]> {
 
   try {
     const db = getDatabase();
+    const dayExpr = sql<string>`(${events.occurredAt} at time zone 'UTC')::date`;
     const rows = await db
       .select({
-        day: dailyAggregates.day,
-        users: sql<number>`coalesce(sum(${dailyAggregates.activeVisitors}), 0)::int`,
-        sessions: sql<number>`coalesce(sum(${dailyAggregates.sessions}), 0)::int`,
-        events: sql<number>`coalesce(sum(${dailyAggregates.events}), 0)::int`,
+        day: dayExpr,
+        users: sql<number>`count(distinct ${events.visitorId})::int`,
+        sessions: sql<number>`count(distinct ${events.sessionId})::int`,
+        events: sql<number>`count(${events.id})::int`,
       })
-      .from(dailyAggregates)
-      .innerJoin(analyticsProjects, eq(analyticsProjects.id, dailyAggregates.projectId))
+      .from(events)
+      .innerJoin(analyticsProjects, eq(analyticsProjects.id, events.projectId))
       .innerJoin(repositories, eq(repositories.id, analyticsProjects.repositoryId))
       .where(
         and(
           eq(repositories.selected, true),
-          gte(dailyAggregates.day, sql`current_date - interval '30 days'`),
+          gte(events.occurredAt, sql`now() - interval '30 days'`),
         ),
       )
-      .groupBy(dailyAggregates.day)
-      .orderBy(dailyAggregates.day);
+      .groupBy(dayExpr)
+      .orderBy(dayExpr);
 
     return rows.map((row) => ({
       day: new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(
