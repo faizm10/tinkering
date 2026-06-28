@@ -114,6 +114,32 @@ export async function getRepository(slug: string) {
   return portfolio.find((repository) => repository.slug === slug) ?? null;
 }
 
+export async function getSdkInstall(slug: string) {
+  if (!hasDatabase()) return null;
+  try {
+    const db = getDatabase();
+    const [row] = await db
+      .select({
+        installedAt: analyticsProjects.sdkInstalledAt,
+        framework: analyticsProjects.sdkFramework,
+        appUrl: analyticsProjects.sdkAppUrl,
+      })
+      .from(analyticsProjects)
+      .innerJoin(repositories, eq(repositories.id, analyticsProjects.repositoryId))
+      .where(eq(repositories.name, slug))
+      .limit(1);
+    if (!row?.installedAt) return null;
+    return {
+      installedAt: row.installedAt.toISOString(),
+      framework: row.framework,
+      appUrl: row.appUrl,
+    };
+  } catch (error) {
+    console.error("sdk_install_query_failed", { error });
+    return null;
+  }
+}
+
 export async function getTrend(slug: string): Promise<TrendPoint[]> {
   if (!hasDatabase()) return [];
 

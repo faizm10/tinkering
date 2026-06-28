@@ -1,14 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Activity, BarChart3, Eye, Users } from "lucide-react";
+import { Activity, BarChart3, Eye, Terminal, Users } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
 import { MetricsPeriodNote } from "@/components/metrics-period-note";
 import { RepositoryChart } from "@/components/repository-chart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getEventBreakdown, getRepository, getTrend } from "@/lib/data";
+import { getEventBreakdown, getRepository, getSdkInstall, getTrend } from "@/lib/data";
 import { computePeriodChange } from "@/lib/metrics";
-import { formatNumber } from "@/lib/utils";
+import { formatNumber, formatRelative } from "@/lib/utils";
 
 export default async function OverviewPage({
   params,
@@ -16,10 +16,11 @@ export default async function OverviewPage({
   params: Promise<{ repo: string }>;
 }) {
   const { repo } = await params;
-  const [repository, trend, breakdown] = await Promise.all([
+  const [repository, trend, breakdown, sdkInstall] = await Promise.all([
     getRepository(repo),
     getTrend(repo),
     getEventBreakdown(repo),
+    getSdkInstall(repo),
   ]);
 
   if (!repository) notFound();
@@ -36,6 +37,17 @@ export default async function OverviewPage({
 
   return (
     <div className="space-y-6">
+      {sdkInstall ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-4 py-2.5 text-sm">
+          <Terminal className="size-4 text-emerald-400" />
+          <span className="font-medium text-emerald-400">Connected via CLI</span>
+          <span className="text-muted-foreground">
+            {sdkInstall.framework ? `${sdkInstall.framework} · ` : ""}
+            installed {formatRelative(sdkInstall.installedAt)}
+          </span>
+        </div>
+      ) : null}
+
       <div
         className={`grid gap-4 md:grid-cols-2 ${showPageviews ? "xl:grid-cols-4" : "xl:grid-cols-3"}`}
       >

@@ -15,6 +15,62 @@ export async function getRouteUserId() {
   return userId;
 }
 
+export type CliProject = {
+  projectId: string;
+  repository: string;
+  slug: string;
+  allowedOrigins: string[];
+  sdkInstalledAt: Date | null;
+  sdkFramework: string | null;
+};
+
+/** Resolves a project from a public tracking key (rp_pub_...), for the CLI/agent setup flow. */
+export async function getCliProjectByPublicKey(publicKey: string): Promise<CliProject | null> {
+  if (!hasDatabase()) return null;
+  const db = getDatabase();
+  const [row] = await db
+    .select({
+      projectId: analyticsProjects.id,
+      repository: repositories.fullName,
+      slug: repositories.name,
+      allowedOrigins: analyticsProjects.allowedOrigins,
+      sdkInstalledAt: analyticsProjects.sdkInstalledAt,
+      sdkFramework: analyticsProjects.sdkFramework,
+    })
+    .from(trackingKeys)
+    .innerJoin(analyticsProjects, eq(analyticsProjects.id, trackingKeys.projectId))
+    .innerJoin(repositories, eq(repositories.id, analyticsProjects.repositoryId))
+    .where(
+      and(
+        eq(trackingKeys.keyHash, hashValue(publicKey)),
+        eq(trackingKeys.kind, "public"),
+        isNull(trackingKeys.revokedAt),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+/** Records that the SDK was installed in a project via the CLI/agent, reporting back to the site. */
+export async function recordSdkInstall(
+  publicKey: string,
+  details: { framework?: string | null; appUrl?: string | null },
+): Promise<CliProject | null> {
+  const project = await getCliProjectByPublicKey(publicKey);
+  if (!project) return null;
+  const db = getDatabase();
+  await db
+    .update(analyticsProjects)
+    .set({
+      sdkInstalledAt: new Date(),
+      sdkFramework: details.framework?.slice(0, 64) ?? null,
+      sdkAppUrl: details.appUrl?.slice(0, 2048) ?? null,
+      updatedAt: new Date(),
+    })
+    .where(eq(analyticsProjects.id, project.projectId));
+  return { ...project, sdkInstalledAt: new Date(), sdkFramework: details.framework ?? null };
+}
+
 export async function listUserRepositories(clerkUserId: string) {
   if (!hasDatabase()) return [];
   const db = getDatabase();

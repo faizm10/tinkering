@@ -502,6 +502,10 @@ function SdkConfig({ project, repoSlug }: { project: CreatedProject; repoSlug: s
     ? `${window.location.origin}/api/ingest`
     : "/api/ingest";
 
+  const installCommand = `curl -fsSL ${
+    typeof window !== "undefined" ? window.location.origin : ""
+  }/install.sh | sh -s -- ${project.publicKey}`;
+
   return (
     <div className="space-y-4 rounded-xl border border-border/60 bg-card/40 p-5">
       <p className="text-sm font-medium">SDK keys for {project.repository}</p>
@@ -509,6 +513,28 @@ function SdkConfig({ project, repoSlug }: { project: CreatedProject; repoSlug: s
         <p className="text-sm font-medium text-emerald-400">Project is ready</p>
         <p className="mt-0.5 text-xs text-muted-foreground">Copy both keys now — the server key is never shown again.</p>
       </div>
+
+      <div className="rounded-lg border border-primary/25 bg-primary/5 p-4">
+        <p className="text-sm font-medium">Quick install (recommended)</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Run this in your project, then ask your AI coding agent to “set up RepoPulse analytics”. It
+          detects your framework, wires in the snippet, and reports back here.
+        </p>
+        <div className="mt-3 flex gap-2">
+          <Input readOnly value={installCommand} className="font-mono text-xs" />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="shrink-0"
+            onClick={() => navigator.clipboard.writeText(installCommand)}
+          >
+            <Copy className="size-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      <p className="text-xs font-medium text-muted-foreground">Or wire it up manually:</p>
       {([["Browser key", project.publicKey], ["Server key", project.secretKey]] as const).map(([label, value]) => (
         <div key={label} className="space-y-1.5">
           <Label className="text-xs">{label}</Label>
