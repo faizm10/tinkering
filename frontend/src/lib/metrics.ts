@@ -1,4 +1,4 @@
-import type { TrendPoint } from "./demo-data";
+import type { TrendPoint } from "./types";
 
 type TrendMetric = "users" | "sessions" | "events" | "pageviews";
 

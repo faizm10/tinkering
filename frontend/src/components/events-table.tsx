@@ -6,7 +6,7 @@ import { Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { EventSummary } from "@/lib/demo-data";
+import type { EventSummary } from "@/lib/types";
 import { formatRelative } from "@/lib/utils";
 import { ScrollableTable } from "@/components/scrollable-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";

@@ -1,4 +1,4 @@
-import type { TrendPoint } from "@/lib/demo-data";
+import type { TrendPoint } from "@/lib/types";
 
 /** Shown when trend data exists but there isn't enough history for week-over-week % change. */
 export function MetricsPeriodNote({

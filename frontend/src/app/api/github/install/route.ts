@@ -1,10 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
-import { clerkConfigured } from "@/lib/auth";
 import { createGitHubInstallState } from "@/lib/github-state";
 
 export async function GET(request: Request) {
-  if (!clerkConfigured || !process.env.GITHUB_APP_SLUG) {
+  if (!process.env.GITHUB_APP_SLUG) {
     return Response.redirect(new URL("/dashboard/onboarding?error=github_app_not_configured", request.url));
   }
   const { userId } = await auth();

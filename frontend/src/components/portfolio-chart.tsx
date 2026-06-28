@@ -1,4 +1,4 @@
-import type { TrendPoint } from "@/lib/demo-data";
+import type { TrendPoint } from "@/lib/types";
 import { TrendChart } from "@/components/trend-chart";
 
 export function PortfolioChart({ data }: { data: TrendPoint[] }) {

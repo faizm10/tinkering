@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import type { RepositorySummary } from "@/lib/demo-data";
+import type { RepositorySummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const tabs = ["overview", "users", "events", "settings"] as const;

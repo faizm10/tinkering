@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollableTable } from "@/components/scrollable-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { ProductUserSummary } from "@/lib/demo-data";
+import type { ProductUserSummary } from "@/lib/types";
 import { formatDate, formatRelative } from "@/lib/utils";
 
 export function UsersTable({

@@ -10,11 +10,7 @@ export default async function OnboardingPage({
 }) {
   const params = await searchParams;
   const viewer = await requireViewer();
-  const workspaceMode: "live" | "demo" | "needs-db" = viewer.isDemo
-    ? "demo"
-    : !hasDatabase()
-      ? "needs-db"
-      : "live";
+  const workspaceMode: "live" | "needs-db" = !hasDatabase() ? "needs-db" : "live";
   const repos = workspaceMode === "live" ? await listUserRepositories(viewer.id) : [];
 
   const installUrl = process.env.GITHUB_APP_SLUG

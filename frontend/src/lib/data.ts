@@ -8,32 +8,12 @@ import {
   repositories,
   sessions,
 } from "@/db/schema";
-import {
-  demoEvents,
-  demoReferrers,
-  demoRepositories,
-  demoTopEvents,
-  demoTrend,
-  demoUsers,
-  isDemoSetupRepository,
-  type EventSummary,
-  type ProductUserSummary,
-  type RepositorySummary,
-  type TrendPoint,
-} from "./demo-data";
-import { clerkConfigured } from "./auth";
+import type { EventSummary, ProductUserSummary, RepositorySummary, TrendPoint } from "./types";
 import { getGoogleAnalyticsMetricsForRepository } from "./google-analytics-admin";
 
-function useDemoFallback() {
-  return !hasDatabase() && !clerkConfigured;
-}
-
-function demoRepositoryHasNoData(slug: string) {
-  return useDemoFallback() && isDemoSetupRepository(slug);
-}
+export type { EventSummary, ProductUserSummary, RepositorySummary, TrendPoint };
 
 export async function getPortfolio(): Promise<RepositorySummary[]> {
-  if (useDemoFallback()) return demoRepositories;
   if (!hasDatabase()) return [];
 
   try {
@@ -131,8 +111,6 @@ export async function getRepository(slug: string) {
 }
 
 export async function getTrend(slug: string): Promise<TrendPoint[]> {
-  if (demoRepositoryHasNoData(slug)) return [];
-  if (useDemoFallback()) return demoTrend;
   if (!hasDatabase()) return [];
 
   try {
@@ -183,7 +161,6 @@ export async function getTrend(slug: string): Promise<TrendPoint[]> {
 }
 
 export async function getPortfolioTrend(): Promise<TrendPoint[]> {
-  if (useDemoFallback()) return demoTrend;
   if (!hasDatabase()) return [];
 
   try {
@@ -222,8 +199,6 @@ export async function getPortfolioTrend(): Promise<TrendPoint[]> {
 }
 
 export async function getUsers(slug: string): Promise<ProductUserSummary[]> {
-  if (demoRepositoryHasNoData(slug)) return [];
-  if (useDemoFallback()) return demoUsers;
   if (!hasDatabase()) return [];
 
   try {
@@ -264,8 +239,6 @@ export async function getUsers(slug: string): Promise<ProductUserSummary[]> {
 }
 
 export async function getEvents(slug: string): Promise<EventSummary[]> {
-  if (demoRepositoryHasNoData(slug)) return [];
-  if (useDemoFallback()) return demoEvents;
   if (!hasDatabase()) return [];
 
   try {
@@ -305,14 +278,6 @@ export async function getUserTimeline(
   slug: string,
   userId: string,
 ): Promise<EventSummary[]> {
-  if (demoRepositoryHasNoData(slug)) return [];
-  if (useDemoFallback()) {
-    const user = demoUsers.find((entry) => entry.id === userId);
-    if (!user) return [];
-    return demoEvents
-      .filter((event) => event.displayId === user.displayId)
-      .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
-  }
   if (!hasDatabase()) return [];
 
   try {
@@ -351,17 +316,17 @@ export async function getUserTimeline(
 export async function getEventBreakdown(slug: string) {
   const googleMetrics = await getGoogleAnalyticsMetricsForRepository(slug);
   if (googleMetrics) {
-    const events = new Map<string, number>();
+    const eventsMap = new Map<string, number>();
     const referrers = new Map<string, number>();
     for (const metric of googleMetrics) {
       for (const [name, count] of Object.entries(metric.eventBreakdown)) {
-        events.set(name, (events.get(name) ?? 0) + count);
+        eventsMap.set(name, (eventsMap.get(name) ?? 0) + count);
       }
       for (const [name, count] of Object.entries(metric.referrerBreakdown)) {
         referrers.set(name, (referrers.get(name) ?? 0) + count);
       }
     }
-    const sortedEvents = [...events.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const sortedEvents = [...eventsMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
     const largestEvent = sortedEvents[0]?.[1] ?? 1;
     return {
       topEvents: sortedEvents.map(([name, count]) => ({
@@ -375,15 +340,8 @@ export async function getEventBreakdown(slug: string) {
         .map(([name, count]) => ({ name, count })),
     };
   }
-  if (demoRepositoryHasNoData(slug)) {
-    return { topEvents: [], referrers: [] };
-  }
-  if (useDemoFallback()) {
-    return { topEvents: demoTopEvents, referrers: demoReferrers };
-  }
-  if (!hasDatabase()) {
-    return { topEvents: [], referrers: [] };
-  }
+
+  if (!hasDatabase()) return { topEvents: [], referrers: [] };
 
   try {
     const db = getDatabase();

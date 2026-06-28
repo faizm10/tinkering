@@ -11,7 +11,6 @@ import {
   ExternalLink,
   Github,
   Lock,
-  RefreshCw,
   Triangle,
   Zap,
 } from "lucide-react";
@@ -40,36 +39,9 @@ type AnalyticsSource = "sdk" | "google-analytics" | "posthog" | "vercel";
 
 type Step = 1 | 2 | 3;
 
-type WorkspaceMode = "live" | "demo" | "needs-db";
+type WorkspaceMode = "live" | "needs-db";
 
-function OnboardingBlockedState({ mode }: { mode: Exclude<WorkspaceMode, "live"> }) {
-  if (mode === "demo") {
-    return (
-      <div className="rounded-2xl border border-border/60 bg-card/50 p-6 sm:p-8">
-        <div className="flex items-start gap-3">
-          <Github className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
-          <div className="space-y-3">
-            <div>
-              <h2 className="text-lg font-semibold">Sign in to connect GitHub</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                You are browsing the demo workspace with sample data. To install the GitHub App and
-                track a real repository, create an account and connect GitHub.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button asChild>
-                <Link href="/sign-up">Create account</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/dashboard">Explore demo dashboard</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+function OnboardingBlockedState({ mode: _ }: { mode: Exclude<WorkspaceMode, "live"> }) {
   return (
     <div className="rounded-2xl border border-border/60 bg-card/50 p-6 sm:p-8">
       <div className="flex items-start gap-3">

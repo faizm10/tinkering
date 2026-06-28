@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { TrendPoint } from "@/lib/demo-data";
+import type { TrendPoint } from "@/lib/types";
 import { TrendChart, type TrendMetric } from "@/components/trend-chart";
 import { Button } from "@/components/ui/button";
 

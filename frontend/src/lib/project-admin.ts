@@ -7,11 +7,9 @@ import {
   repositories,
   trackingKeys,
 } from "@/db/schema";
-import { clerkConfigured } from "./auth";
 import { createTrackingKey, hashValue } from "./tracking";
 
 export async function getRouteUserId() {
-  if (!clerkConfigured) return "demo-user";
   const { auth } = await import("@clerk/nextjs/server");
   const { userId } = await auth();
   return userId;

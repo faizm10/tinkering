@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2, CircleDashed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { clerkConfigured } from "@/lib/auth";
 
 type CheckItem = {
   label: string;
@@ -52,9 +51,7 @@ export default function WorkspaceSettingsPage() {
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Workspace settings</h1>
         <p className="mt-2 text-muted-foreground">
-          {productionReady
-            ? "Production integrations are configured. New sign-ups will land in live workspaces."
-            : "Demo mode stays available until every integration below is configured."}
+          Configure integrations and environment variables for production.
         </p>
       </div>
 
@@ -106,11 +103,11 @@ export default function WorkspaceSettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>What to do next</CardTitle>
-          <CardDescription>A typical path from demo to production.</CardDescription>
+          <CardDescription>Get up and running in production.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <p>1. Configure the integrations above in Vercel or your deployment environment.</p>
-          <p>2. {clerkConfigured ? "Sign in and connect GitHub from onboarding." : "Add Clerk keys, then sign in and connect GitHub."}</p>
+          <p>2. Sign in and connect GitHub from onboarding.</p>
           <p>3. Create a repository project and install the browser SDK or connect GA4, PostHog, or Vercel Analytics.</p>
           <p>4. Open the repository overview and confirm events appear within a few minutes.</p>
           <div className="flex flex-wrap gap-2 pt-2">

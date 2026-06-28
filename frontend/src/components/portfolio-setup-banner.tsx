@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { RepositorySummary } from "@/lib/demo-data";
+import type { RepositorySummary } from "@/lib/types";
 
 export function PortfolioSetupBanner({ repositories }: { repositories: RepositorySummary[] }) {
   const setupRepos = repositories.filter((repo) => repo.status !== "live");

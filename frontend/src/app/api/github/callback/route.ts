@@ -1,7 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { hasDatabase } from "@/db";
-import { clerkConfigured } from "@/lib/auth";
 import { ensureDashboardAccount, syncInstallation } from "@/lib/github-sync";
 import { verifyGitHubInstallState } from "@/lib/github-state";
 
@@ -10,9 +9,6 @@ export async function GET(request: Request) {
   const installationId = Number(url.searchParams.get("installation_id"));
   if (!Number.isSafeInteger(installationId)) {
     return Response.json({ error: "missing_installation_id" }, { status: 400 });
-  }
-  if (!clerkConfigured) {
-    return Response.redirect(new URL("/dashboard/onboarding?error=clerk_not_configured", request.url));
   }
   if (!hasDatabase()) {
     return Response.redirect(new URL("/dashboard/onboarding?error=database_not_configured", request.url));
