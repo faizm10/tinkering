@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd frontend && npm run build && mkdir -p ../.next && cp .next/package.json ../.next/",
-  "outputDirectory": "frontend/.next",
-  "installCommand": "cd frontend && npm install",
-  "framework": "nextjs"
-}
