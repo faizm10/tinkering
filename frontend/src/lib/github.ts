@@ -1,5 +1,5 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
-import { SignJWT, importPKCS8 } from "jose";
+import { createHmac, createPrivateKey, timingSafeEqual } from "node:crypto";
+import { SignJWT } from "jose";
 
 type GitHubRepository = {
   id: number;
@@ -24,7 +24,9 @@ async function createAppJwt() {
   const encodedKey = process.env.GITHUB_APP_PRIVATE_KEY;
   if (!appId || !encodedKey) throw new Error("GitHub App credentials are not configured");
 
-  const privateKey = await importPKCS8(encodedKey.replace(/\\n/g, "\n"), "RS256");
+  // GitHub issues PKCS#1 keys ("BEGIN RSA PRIVATE KEY"); createPrivateKey also
+  // accepts PKCS#8 ("BEGIN PRIVATE KEY"), so this handles either format.
+  const privateKey = createPrivateKey(encodedKey.replace(/\\n/g, "\n"));
   const now = Math.floor(Date.now() / 1000);
   return new SignJWT({})
     .setProtectedHeader({ alg: "RS256" })
@@ -54,6 +56,24 @@ export async function getInstallationToken(installationId: number) {
   }
 
   return (await response.json()) as { token: string; expires_at: string };
+}
+
+export async function listAppInstallations() {
+  const jwt = await createAppJwt();
+  const response = await fetch("https://api.github.com/app/installations?per_page=100", {
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${jwt}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error(`GitHub installations list failed: ${response.status}`);
+  return (await response.json()) as {
+    id: number;
+    account: { id: number; login: string; type: string } | null;
+    suspended_at: string | null;
+  }[];
 }
 
 export async function getInstallation(installationId: number) {

@@ -836,6 +836,52 @@ export function OnboardingWizard({
   initiallyConnected?: boolean;
   workspaceMode?: WorkspaceMode;
 }) {
+  const [repos, setRepos] = useState<Repo[]>(initialRepos);
+  const hasRepos = repos.length > 0;
+  const [step, setStep] = useState<Step>(hasRepos && initiallyConnected ? 2 : 1);
+  const [project, setProject] = useState<CreatedProject | null>(null);
+  const [isPolling, setIsPolling] = useState(!!(initiallyConnected && !hasRepos));
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Start polling when user clicks Install on GitHub
+  function handleInstallClick() {
+    setIsPolling(true);
+  }
+
+  // Poll the identity-matched sync while on step 1 with no repos
+  useEffect(() => {
+    if (workspaceMode !== "live") return;
+    if (step !== 1 || hasRepos) return;
+    if (!isPolling) return;
+
+    pollRef.current = setInterval(async () => {
+      try {
+        // Identity-matched sync: discovers and links any installation that
+        // belongs to the user's verified GitHub login, then returns repos.
+        const res = await fetch("/api/github/sync", { method: "POST" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { repos: Repo[] };
+        if (data.repos.length > 0) {
+          setRepos(data.repos);
+          setStep(2);
+          setIsPolling(false);
+          if (pollRef.current) clearInterval(pollRef.current);
+        }
+      } catch {
+        // network blip — keep polling
+      }
+    }, 2500);
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [workspaceMode, step, hasRepos, isPolling]);
+
+  function handleCreated(p: CreatedProject) {
+    setProject(p);
+    setStep(3);
+  }
+
   if (workspaceMode !== "live") {
     return (
       <div className="mx-auto max-w-3xl space-y-8">
@@ -849,49 +895,6 @@ export function OnboardingWizard({
         <OnboardingBlockedState mode={workspaceMode} />
       </div>
     );
-  }
-
-  const [repos, setRepos] = useState<Repo[]>(initialRepos);
-  const hasRepos = repos.length > 0;
-  const [step, setStep] = useState<Step>(hasRepos && initiallyConnected ? 2 : 1);
-  const [project, setProject] = useState<CreatedProject | null>(null);
-  const [isPolling, setIsPolling] = useState(!!(initiallyConnected && !hasRepos));
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Start polling when user clicks Install on GitHub
-  function handleInstallClick() {
-    setIsPolling(true);
-  }
-
-  // Poll /api/repos while on step 1 with no repos
-  useEffect(() => {
-    if (step !== 1 || hasRepos) return;
-    if (!isPolling) return;
-
-    pollRef.current = setInterval(async () => {
-      try {
-        const res = await fetch("/api/repos");
-        if (!res.ok) return;
-        const data = (await res.json()) as { repos: Repo[] };
-        if (data.repos.length > 0) {
-          setRepos(data.repos);
-          setStep(2);
-          setIsPolling(false);
-          if (pollRef.current) clearInterval(pollRef.current);
-        }
-      } catch {
-        // network blip — keep polling
-      }
-    }, 2000);
-
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [step, hasRepos, isPolling]);
-
-  function handleCreated(p: CreatedProject) {
-    setProject(p);
-    setStep(3);
   }
 
   return (

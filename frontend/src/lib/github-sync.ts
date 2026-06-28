@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { getDatabase } from "@/db";
 import { dashboardAccounts, githubInstallations, repositories } from "@/db/schema";
-import { getInstallation, listInstallationRepositories } from "./github";
+import { getInstallation, listAppInstallations, listInstallationRepositories } from "./github";
 
 export async function syncInstallation(accountId: string, installationId: number) {
   const db = getDatabase();
@@ -61,6 +61,27 @@ export async function syncInstallation(accountId: string, installationId: number
   }
 
   return { installation, repositories: githubRepositories };
+}
+
+/**
+ * Discovers GitHub App installations that belong to the given GitHub login and
+ * links them to the dashboard account. Matching by the OAuth-verified GitHub
+ * login (from Clerk) proves the user owns the installation, so this is safe to
+ * run without the install-state cookie — it works no matter how the user
+ * installed the app (in-app button or directly from GitHub settings).
+ */
+export async function syncInstallationsForGitHubLogin(clerkUserId: string, githubLogin: string) {
+  const installations = await listAppInstallations();
+  const matches = installations.filter(
+    (installation) => installation.account?.login?.toLowerCase() === githubLogin.toLowerCase(),
+  );
+  if (matches.length === 0) return { linked: 0 };
+
+  const account = await ensureDashboardAccount(clerkUserId, githubLogin);
+  for (const installation of matches) {
+    await syncInstallation(account.id, installation.id);
+  }
+  return { linked: matches.length };
 }
 
 export async function ensureDashboardAccount(clerkUserId: string, githubLogin?: string) {
