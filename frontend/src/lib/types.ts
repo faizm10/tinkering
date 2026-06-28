@@ -19,6 +19,8 @@ export type RepositorySummary = {
   status: "live" | "setup";
   analyticsSource?: "native" | "google-analytics";
   lastEventAt?: string | null;
+  sdkInstalledAt?: string | null;
+  sdkFramework?: string | null;
 };
 
 export type ProductUserSummary = {

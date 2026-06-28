@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Activity, ArrowRight, BarChart3, Users } from "lucide-react";
+import { Activity, ArrowRight, BarChart3, Terminal, Users } from "lucide-react";
 import { MetricCard } from "@/components/metric-card";
 import { PortfolioSetupBanner } from "@/components/portfolio-setup-banner";
 import { MetricsPeriodNote } from "@/components/metrics-period-note";
@@ -104,13 +104,25 @@ export default async function DashboardPage() {
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={repo.status === "live" ? "success" : "outline"}>
-                        {repo.analyticsSource === "google-analytics"
-                          ? "GA4"
-                          : repo.status === "live"
-                            ? "Live"
-                            : "Setup"}
-                      </Badge>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant={repo.status === "live" ? "success" : "outline"}>
+                          {repo.analyticsSource === "google-analytics"
+                            ? "GA4"
+                            : repo.status === "live"
+                              ? "Live"
+                              : "Setup"}
+                        </Badge>
+                        {repo.sdkInstalledAt ? (
+                          <Badge
+                            variant="outline"
+                            className="gap-1 border-emerald-500/30 text-emerald-400"
+                            title={`Connected via CLI${repo.sdkFramework ? ` · ${repo.sdkFramework}` : ""}`}
+                          >
+                            <Terminal className="size-3" />
+                            CLI
+                          </Badge>
+                        ) : null}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right font-mono">{formatNumber(repo.activeUsers)}</TableCell>
                     <TableCell className="text-right font-mono">{formatNumber(repo.sessions)}</TableCell>

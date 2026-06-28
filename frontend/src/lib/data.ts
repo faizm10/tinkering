@@ -27,6 +27,8 @@ export async function getPortfolio(): Promise<RepositorySummary[]> {
         fullName: repositories.fullName,
         private: repositories.private,
         projectId: analyticsProjects.id,
+        sdkInstalledAt: analyticsProjects.sdkInstalledAt,
+        sdkFramework: analyticsProjects.sdkFramework,
         activeUsers: sql<number>`count(distinct ${events.visitorId})::int`,
         sessions: sql<number>`count(distinct ${events.sessionId})::int`,
         pageviews: sql<number>`count(*) filter (where ${events.name} = '$pageview')::int`,
@@ -84,6 +86,8 @@ export async function getPortfolio(): Promise<RepositorySummary[]> {
             status: "live" as const,
             analyticsSource: "google-analytics" as const,
             lastEventAt,
+            sdkInstalledAt: row.sdkInstalledAt?.toISOString() ?? null,
+            sdkFramework: row.sdkFramework ?? null,
           };
         }
 
@@ -100,6 +104,8 @@ export async function getPortfolio(): Promise<RepositorySummary[]> {
           status: row.projectId ? ("live" as const) : ("setup" as const),
           analyticsSource: "native" as const,
           lastEventAt,
+          sdkInstalledAt: row.sdkInstalledAt?.toISOString() ?? null,
+          sdkFramework: row.sdkFramework ?? null,
         };
       }),
     );
