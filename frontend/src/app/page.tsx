@@ -69,7 +69,10 @@ const steps = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-background">
+    <main className="relative min-h-screen bg-background">
+      <div className="page-grid pointer-events-none absolute inset-0 opacity-40" />
+      <div className="pointer-events-none absolute inset-0 mx-auto hidden max-w-7xl border-x border-border/40 sm:block" />
+
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center px-5 sm:px-8">
@@ -97,6 +100,7 @@ export default function HomePage() {
             </Button>
           </div>
         </div>
+        <GridCrosses edge="bottom" />
       </header>
 
       {/* Hero */}
@@ -148,6 +152,7 @@ export default function HomePage() {
 
           <DashboardPreview />
         </div>
+        <GridCrosses edge="bottom" />
       </section>
 
       {/* Integration bar */}
@@ -205,8 +210,10 @@ export default function HomePage() {
       </section>
 
       {/* How it works */}
-      <section id="workflow" className="border-y border-border/50">
+      <section id="workflow" className="relative border-y border-border/50">
         <div className="workflow-bg absolute left-0 right-0 h-full" />
+        <GridCrosses edge="top" />
+        <GridCrosses edge="bottom" />
         <div className="relative mx-auto max-w-7xl px-5 py-24 sm:px-8 sm:py-32">
           <div className="mb-14 max-w-2xl">
             <p className="text-sm font-medium text-primary">Simple by design</p>
@@ -273,7 +280,8 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 bg-card/10">
+      <footer className="relative border-t border-border/50 bg-card/10">
+        <GridCrosses edge="top" />
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:px-8">
           <Logo />
           <p className="sm:ml-4 text-muted-foreground/60">GitHub-centered product analytics.</p>
@@ -288,6 +296,19 @@ export default function HomePage() {
         </div>
       </footer>
     </main>
+  );
+}
+
+function GridCrosses({ edge }: { edge: "top" | "bottom" }) {
+  return (
+    <div
+      className={`pointer-events-none absolute inset-x-0 z-10 mx-auto hidden max-w-7xl sm:block ${
+        edge === "top" ? "top-0" : "bottom-0"
+      }`}
+    >
+      <span className="grid-cross absolute left-0 -translate-x-1/2 -translate-y-1/2" />
+      <span className="grid-cross absolute right-0 translate-x-1/2 -translate-y-1/2" />
+    </div>
   );
 }
 
