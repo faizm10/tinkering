@@ -31,6 +31,10 @@ export type WaitingItemRecord = {
   expectedBy: string | null;
   followUpDate: string | null;
   status: "waiting" | "follow_up_due" | "resolved" | "cancelled";
+  /** Both columns already exist on `waiting_items`; the UI needs them to show
+   *  how long something has been waiting. */
+  createdAt: string;
+  resolvedAt: string | null;
 };
 
 export type ReminderRecord = {
@@ -61,6 +65,22 @@ export type ActivityRecord = {
   createdAt: string;
 };
 
+/** A life event plus everything attached to it, for the detail screen. */
+export type LifeEventDetail = LifeEventRecord & {
+  tasks: TaskRecord[];
+  reminders: ReminderRecord[];
+  waiting: WaitingItemRecord[];
+  activity: ActivityRecord[];
+};
+
+/** Counts the events list needs to show progress without loading every task. */
+export type LifeEventSummary = LifeEventRecord & {
+  totalTasks: number;
+  completedTasks: number;
+  nextTask: TaskRecord | null;
+  waitingCount: number;
+};
+
 export type DashboardData = {
   profile: {
     name: string;
@@ -70,7 +90,7 @@ export type DashboardData = {
   today: TaskRecord[];
   upcoming: TaskRecord[];
   waiting: WaitingItemRecord[];
-  lifeEvents: LifeEventRecord[];
+  lifeEvents: LifeEventSummary[];
   proposals: ProposalRecord[];
   recentlyCompleted: TaskRecord[];
   activity: ActivityRecord[];
