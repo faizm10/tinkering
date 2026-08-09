@@ -3,20 +3,23 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
+import { Field, Input } from "@/components/ui/field";
 import { authClient } from "@/lib/auth/client";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("demo@lifeadmin.local");
-  const [password, setPassword] = useState("password1234");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+
     startTransition(async () => {
       if (mode === "register") {
         const result = await authClient.signUp.email({ name, email, password });
@@ -31,32 +34,78 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           return;
         }
       }
+
       router.push(mode === "register" ? "/onboarding" : "/dashboard");
       router.refresh();
     });
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit} className="space-y-5" noValidate={false}>
       {mode === "register" ? (
-        <label className="block text-sm font-medium">
-          Name
-          <input className="mt-2 w-full border border-input bg-background p-3" value={name} onChange={(event) => setName(event.target.value)} required />
-        </label>
+        <Field label="Name" htmlFor="auth-name">
+          <Input
+            id="auth-name"
+            name="name"
+            autoComplete="name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            required
+          />
+        </Field>
       ) : null}
-      <label className="block text-sm font-medium">
-        Email
-        <input className="mt-2 w-full border border-input bg-background p-3" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
-      </label>
-      <label className="block text-sm font-medium">
-        Password
-        <input className="mt-2 w-full border border-input bg-background p-3" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={8} />
-      </label>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button className="w-full" disabled={pending}>{mode === "register" ? "Create account" : "Sign in"}</Button>
-      <p className="text-sm text-muted-foreground">
+
+      <Field label="Email" htmlFor="auth-email">
+        <Input
+          id="auth-email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required
+        />
+      </Field>
+
+      <Field
+        label="Password"
+        htmlFor="auth-password"
+        hint={mode === "register" ? "At least 8 characters." : undefined}
+      >
+        <Input
+          id="auth-password"
+          name="password"
+          type="password"
+          autoComplete={mode === "register" ? "new-password" : "current-password"}
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+          minLength={8}
+        />
+      </Field>
+
+      {error ? (
+        <p role="alert" className="text-[0.875rem] text-error">
+          {error}
+        </p>
+      ) : null}
+
+      <Button type="submit" className="w-full" disabled={pending}>
+        {pending
+          ? mode === "register"
+            ? "Creating account…"
+            : "Signing in…"
+          : mode === "register"
+            ? "Create account"
+            : "Sign in"}
+      </Button>
+
+      <p className="type-meta">
         {mode === "register" ? "Already have an account? " : "Need an account? "}
-        <Link className="font-medium text-foreground" href={mode === "register" ? "/login" : "/register"}>
+        <Link
+          className="text-ink underline decoration-hairline-strong underline-offset-2 hover:decoration-ink"
+          href={mode === "register" ? "/login" : "/register"}
+        >
           {mode === "register" ? "Sign in" : "Create one"}
         </Link>
       </p>
