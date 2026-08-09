@@ -1,27 +1,37 @@
-import { cn } from "@/lib/utils";
-
+/**
+ * A dashboard section is a heading, a rule, and content. Whitespace and the
+ * hairline do the separating — no bordered container, so cards never end up
+ * nested inside cards.
+ */
 export function Section({
   title,
-  description,
+  count,
+  action,
   children,
   className,
+  headingLevel: Heading = "h2",
 }: {
   title: string;
-  description?: string;
+  count?: number;
+  action?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  headingLevel?: "h2" | "h3";
 }) {
   return (
-    <section className={cn("border border-border bg-card p-5", className)}>
-      <div className="mb-4">
-        <h2 className="text-base font-semibold">{title}</h2>
-        {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+    <section className={className}>
+      <div className="flex items-baseline justify-between gap-4 border-b border-hairline pb-2.5">
+        <div className="flex items-baseline gap-2.5">
+          <Heading className="type-section">{title}</Heading>
+          {typeof count === "number" && count > 0 ? (
+            <span className="type-mono text-muted" aria-hidden>
+              {count}
+            </span>
+          ) : null}
+        </div>
+        {action}
       </div>
-      {children}
+      <div className="pt-1">{children}</div>
     </section>
   );
-}
-
-export function EmptyState({ children }: { children: React.ReactNode }) {
-  return <div className="border border-dashed border-border bg-muted/40 p-4 text-sm text-muted-foreground">{children}</div>;
 }
