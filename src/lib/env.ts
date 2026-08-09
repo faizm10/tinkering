@@ -11,10 +11,14 @@ const envSchema = z.object({
   AI_PROVIDER: aiProviderSchema.default("mock"),
   AUTH_PROVIDER: authProviderSchema.default("demo"),
   DATABASE_URL: z.string().url().optional().or(z.literal("")),
-  BETTER_AUTH_SECRET: z.string().min(16).optional().or(z.literal("")),
-  BETTER_AUTH_URL: z.string().url().default("http://localhost:3000"),
+  DATABASE_URL_UNPOOLED: z.string().url().optional().or(z.literal("")),
+  NEON_AUTH_BASE_URL: z.string().url().optional().or(z.literal("")),
+  NEON_AUTH_COOKIE_SECRET: z.string().min(32).optional().or(z.literal("")),
   OPENAI_API_KEY: z.string().optional().or(z.literal("")),
   OPENAI_MODEL: z.string().default("gpt-5-mini"),
+  AGENT_MAX_STEPS: z.coerce.number().int().min(1).max(30).default(12),
+  AGENT_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(60_000).default(20_000),
+  AGENT_CLARIFICATION_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(168),
   CRON_SECRET: z.string().optional().or(z.literal("")),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 }).superRefine((value, ctx) => {
@@ -50,11 +54,19 @@ const envSchema = z.object({
     });
   }
 
-  if (value.AUTH_PROVIDER === "better-auth" && !value.BETTER_AUTH_SECRET) {
+  if (value.AUTH_PROVIDER === "better-auth" && !value.NEON_AUTH_BASE_URL) {
     ctx.addIssue({
       code: "custom",
-      path: ["BETTER_AUTH_SECRET"],
-      message: "BETTER_AUTH_SECRET is required when AUTH_PROVIDER=better-auth.",
+      path: ["NEON_AUTH_BASE_URL"],
+      message: "NEON_AUTH_BASE_URL is required when AUTH_PROVIDER=better-auth.",
+    });
+  }
+
+  if (value.AUTH_PROVIDER === "better-auth" && !value.NEON_AUTH_COOKIE_SECRET) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["NEON_AUTH_COOKIE_SECRET"],
+      message: "NEON_AUTH_COOKIE_SECRET is required when AUTH_PROVIDER=better-auth.",
     });
   }
 
@@ -77,10 +89,14 @@ export const env = parseServerEnv({
   AI_PROVIDER: process.env.AI_PROVIDER,
   AUTH_PROVIDER: process.env.AUTH_PROVIDER,
   DATABASE_URL: process.env.DATABASE_URL,
-  BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
-  BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+  DATABASE_URL_UNPOOLED: process.env.DATABASE_URL_UNPOOLED,
+  NEON_AUTH_BASE_URL: process.env.NEON_AUTH_BASE_URL,
+  NEON_AUTH_COOKIE_SECRET: process.env.NEON_AUTH_COOKIE_SECRET,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   OPENAI_MODEL: process.env.OPENAI_MODEL,
+  AGENT_MAX_STEPS: process.env.AGENT_MAX_STEPS,
+  AGENT_TIMEOUT_MS: process.env.AGENT_TIMEOUT_MS,
+  AGENT_CLARIFICATION_TTL_HOURS: process.env.AGENT_CLARIFICATION_TTL_HOURS,
   CRON_SECRET: process.env.CRON_SECRET,
   NODE_ENV: process.env.NODE_ENV,
 });

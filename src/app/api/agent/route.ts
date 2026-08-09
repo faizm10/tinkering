@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth/session";
+import { toSafeAgentMessage } from "@/server/agent/errors";
 import { createAgentProposal } from "@/server/agent/agent";
 
 export async function POST(request: Request) {
@@ -13,6 +14,6 @@ export async function POST(request: Request) {
     if (error instanceof z.ZodError) {
       return Response.json({ error: error.issues[0]?.message ?? "Invalid input." }, { status: 400 });
     }
-    return Response.json({ error: error instanceof Error ? error.message : "The agent failed." }, { status: 500 });
+    return Response.json({ error: toSafeAgentMessage(error) }, { status: 500 });
   }
 }

@@ -17,84 +17,30 @@ const timestamps = {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 };
 
-export const users = pgTable("user", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").notNull().default(false),
-  image: text("image"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
-export const sessions = pgTable(
-  "session",
-  {
-    id: text("id").primaryKey(),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    token: text("token").notNull().unique(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-    ipAddress: text("ip_address"),
-    userAgent: text("user_agent"),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-  },
-  (table) => ({
-    userIdx: index("session_user_id_idx").on(table.userId),
-  }),
-);
-
-export const accounts = pgTable(
-  "account",
-  {
-    id: text("id").primaryKey(),
-    accountId: text("account_id").notNull(),
-    providerId: text("provider_id").notNull(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    accessToken: text("access_token"),
-    refreshToken: text("refresh_token"),
-    idToken: text("id_token"),
-    accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
-    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
-    scope: text("scope"),
-    password: text("password"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => ({
-    userIdx: index("account_user_id_idx").on(table.userId),
-  }),
-);
-
-export const verifications = pgTable("verification", {
-  id: text("id").primaryKey(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
 export const lifeEventStatus = pgEnum("life_event_status", ["draft", "active", "completed", "archived"]);
 export const taskStatus = pgEnum("task_status", ["pending", "in_progress", "completed", "cancelled"]);
 export const taskPriority = pgEnum("task_priority", ["low", "medium", "high"]);
 export const reminderStatus = pgEnum("reminder_status", ["scheduled", "sent", "dismissed", "cancelled"]);
 export const waitingItemStatus = pgEnum("waiting_item_status", ["waiting", "follow_up_due", "resolved", "cancelled"]);
 export const proposalStatus = pgEnum("proposal_status", ["pending", "approved", "rejected", "expired"]);
-export const agentRunStatus = pgEnum("agent_run_status", ["running", "completed", "failed", "awaiting_clarification"]);
+export const agentRunStatus = pgEnum("agent_run_status", [
+  "created",
+  "running",
+  "awaiting_clarification",
+  "ready_for_review",
+  "approved",
+  "rejected",
+  "failed",
+  "expired",
+  "completed",
+]);
 export const activityAction = pgEnum("activity_action", ["created", "updated", "completed", "approved", "rejected", "archived"]);
 
 export const profiles = pgTable(
   "profiles",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     name: text("name").notNull(),
     timezone: text("timezone").notNull(),
     reminderPreference: text("reminder_preference").notNull().default("morning"),
@@ -110,7 +56,7 @@ export const lifeEvents = pgTable(
   "life_events",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     title: text("title").notNull(),
     description: text("description").notNull().default(""),
     category: text("category").notNull().default("general"),
@@ -131,7 +77,7 @@ export const tasks = pgTable(
   "tasks",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     lifeEventId: uuid("life_event_id").references(() => lifeEvents.id, { onDelete: "set null" }),
     title: text("title").notNull(),
     description: text("description").notNull().default(""),
@@ -155,7 +101,7 @@ export const reminders = pgTable(
   "reminders",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     taskId: uuid("task_id").references(() => tasks.id, { onDelete: "cascade" }),
     lifeEventId: uuid("life_event_id").references(() => lifeEvents.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
@@ -174,7 +120,7 @@ export const waitingItems = pgTable(
   "waiting_items",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     lifeEventId: uuid("life_event_id").references(() => lifeEvents.id, { onDelete: "set null" }),
     title: text("title").notNull(),
     description: text("description").notNull().default(""),
@@ -196,7 +142,7 @@ export const agentProposals = pgTable(
   "agent_proposals",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     originalInput: text("original_input").notNull(),
     conversationContextJson: jsonb("conversation_context_json").$type<Record<string, unknown>>().notNull().default({}),
     proposedPlanJson: jsonb("proposed_plan_json").$type<Record<string, unknown>>().notNull(),
@@ -216,14 +162,18 @@ export const agentRuns = pgTable(
   "agent_runs",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     proposalId: uuid("proposal_id").references(() => agentProposals.id, { onDelete: "set null" }),
     input: text("input").notNull(),
     provider: text("provider").notNull().default("mock"),
     status: agentRunStatus("status").notNull().default("running"),
     model: text("model").notNull(),
+    promptVersion: text("prompt_version").notNull().default("sonae-v1"),
     stepCount: integer("step_count").notNull().default(0),
     toolCallsJson: jsonb("tool_calls_json").$type<Array<Record<string, unknown>>>().notNull().default([]),
+    progressEventsJson: jsonb("progress_events_json").$type<Array<Record<string, unknown>>>().notNull().default([]),
+    usageJson: jsonb("usage_json").$type<Record<string, unknown>>(),
+    errorCategory: text("error_category"),
     errorMessage: text("error_message"),
     startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
@@ -238,7 +188,7 @@ export const activityLogs = pgTable(
   "activity_logs",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     actor: text("actor").notNull().default("system"),
     action: activityAction("action").notNull(),
     entityType: text("entity_type").notNull(),

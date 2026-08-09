@@ -119,6 +119,7 @@ function toActivity(row: typeof activityLogs.$inferSelect): ActivityRecord {
 }
 
 function toProposal(row: typeof agentProposals.$inferSelect): ProposalRecord {
+  const state = typeof row.conversationContextJson.state === "string" ? row.conversationContextJson.state : row.status === "pending" ? "ready_for_review" : row.status;
   return {
     id: row.id,
     userId: row.userId,
@@ -128,6 +129,7 @@ function toProposal(row: typeof agentProposals.$inferSelect): ProposalRecord {
     status: row.status,
     createdAt: serializeDate(row.createdAt) ?? new Date().toISOString(),
     reviewedAt: serializeDate(row.reviewedAt),
+    state: state as ProposalRecord["state"],
     clarificationQuestion:
       typeof row.conversationContextJson.clarificationQuestion === "string"
         ? row.conversationContextJson.clarificationQuestion
@@ -196,7 +198,7 @@ export class DrizzleDataRepository implements DataRepository {
   async getProfile(userId: string) {
     const [profile] = await db.select().from(profiles).where(eq(profiles.userId, userId)).limit(1);
     return {
-      name: profile?.name ?? "Life Admin User",
+      name: profile?.name ?? "Sonae User",
       timezone: profile?.timezone ?? "America/Toronto",
       reminderPreference: profile?.reminderPreference ?? "Morning digest",
     };
@@ -224,7 +226,7 @@ export class DrizzleDataRepository implements DataRepository {
         onboardingCompleted: true,
       });
     }
-    await log(db, userId, "user", "updated", "profile", "profile", "Updated Life Admin preferences.");
+    await log(db, userId, "user", "updated", "profile", "profile", "Updated Sonae preferences.");
     return profile;
   }
 
@@ -502,8 +504,12 @@ export class DrizzleDataRepository implements DataRepository {
         .limit(1);
       if (!proposal) throw new Error("Proposal not found.");
       if (proposal.status !== "pending") throw new Error("This proposal has already been reviewed.");
+      if (proposal.conversationContextJson.state === "awaiting_clarification") {
+        throw new Error("This proposal still needs clarification before approval.");
+      }
 
       const parsed = agentProposalSchema.parse(editedProposal);
+      if (parsed.clarificationQuestions.length) throw new Error("This proposal still needs clarification before approval.");
       const [event] = await tx
         .insert(lifeEvents)
         .values({
@@ -561,7 +567,7 @@ export class DrizzleDataRepository implements DataRepository {
 
       await tx
         .update(agentProposals)
-        .set({ status: "approved", reviewedAt: new Date(), proposedPlanJson: parsed })
+        .set({ status: "approved", reviewedAt: new Date(), proposedPlanJson: parsed, conversationContextJson: { ...proposal.conversationContextJson, state: "approved" } })
         .where(and(eq(agentProposals.id, proposalId), eq(agentProposals.userId, userId), eq(agentProposals.status, "pending")));
 
       await log(tx, userId, "user", "approved", "agent_proposal", proposal.id, `Approved "${parsed.lifeEvent.title}".`);
@@ -581,7 +587,7 @@ export class DrizzleDataRepository implements DataRepository {
 
     const [proposal] = await db
       .update(agentProposals)
-      .set({ status: "rejected", reviewedAt: new Date() })
+      .set({ status: "rejected", reviewedAt: new Date(), conversationContextJson: { ...current.conversationContextJson, state: "rejected" } })
       .where(and(eq(agentProposals.id, proposalId), eq(agentProposals.userId, userId), eq(agentProposals.status, "pending")))
       .returning();
     await log(db, userId, "user", "rejected", "agent_proposal", proposal.id, "Rejected an agent proposal.");
@@ -594,12 +600,16 @@ export class DrizzleDataRepository implements DataRepository {
         userId,
         proposalId: run.proposalId,
         input: run.input,
-        provider: run.provider,
-        model: run.model,
-        status: run.status,
-        stepCount: run.stepCount,
-        toolCallsJson: run.toolCallsJson,
-        errorMessage: run.errorMessage,
+      provider: run.provider,
+      model: run.model,
+      promptVersion: run.promptVersion ?? "sonae-v1",
+      status: run.status,
+      stepCount: run.stepCount,
+      toolCallsJson: run.toolCallsJson,
+      progressEventsJson: run.progressEventsJson ?? [],
+      usageJson: run.usageJson ?? null,
+      errorCategory: run.errorCategory ?? null,
+      errorMessage: run.errorMessage,
         completedAt: run.completedAt ? new Date(run.completedAt) : null,
       })
       .returning();
@@ -610,9 +620,13 @@ export class DrizzleDataRepository implements DataRepository {
       input: record.input,
       provider: record.provider as AgentRunRecord["provider"],
       model: record.model,
-      status: record.status,
+      promptVersion: record.promptVersion,
+      status: record.status as AgentRunRecord["status"],
       stepCount: record.stepCount,
       toolCallsJson: record.toolCallsJson,
+      progressEventsJson: record.progressEventsJson,
+      usageJson: record.usageJson,
+      errorCategory: record.errorCategory,
       errorMessage: record.errorMessage,
       startedAt: serializeDate(record.startedAt) ?? new Date().toISOString(),
       completedAt: serializeDate(record.completedAt),

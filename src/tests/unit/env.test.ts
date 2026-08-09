@@ -32,4 +32,19 @@ describe("environment provider modes", () => {
       }),
     ).toThrow();
   });
+
+  it("accepts Neon Auth and Postgres credentials for managed auth", () => {
+    const env = parseServerEnv({
+      APP_MODE: "demo",
+      DATA_PROVIDER: "postgres",
+      AI_PROVIDER: "mock",
+      AUTH_PROVIDER: "better-auth",
+      DATABASE_URL: "postgres://user:password@example.neon.tech/neondb",
+      NEON_AUTH_BASE_URL: "https://example.neonauth.us-east-2.aws.neon.tech/neondb/auth",
+      NEON_AUTH_COOKIE_SECRET: "x".repeat(32),
+    });
+
+    expect(env.DATA_PROVIDER).toBe("postgres");
+    expect(env.AUTH_PROVIDER).toBe("better-auth");
+  });
 });

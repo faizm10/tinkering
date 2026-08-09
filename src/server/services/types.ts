@@ -60,6 +60,7 @@ export type ProposalRecord = {
   createdAt: string;
   reviewedAt: string | null;
   clarificationQuestion?: string;
+  state?: "created" | "running" | "awaiting_clarification" | "ready_for_review" | "approved" | "rejected" | "failed" | "expired";
 };
 
 export type ActivityRecord = {
@@ -80,9 +81,13 @@ export type AgentRunRecord = {
   input: string;
   provider: "mock" | "openai";
   model: string;
-  status: "running" | "completed" | "failed" | "awaiting_clarification";
+  promptVersion?: string;
+  status: "created" | "running" | "awaiting_clarification" | "ready_for_review" | "approved" | "rejected" | "failed" | "expired" | "completed";
   stepCount: number;
   toolCallsJson: Array<Record<string, unknown>>;
+  progressEventsJson?: Array<Record<string, unknown>>;
+  usageJson?: Record<string, unknown> | null;
+  errorCategory?: string | null;
   errorMessage: string | null;
   startedAt: string;
   completedAt: string | null;
