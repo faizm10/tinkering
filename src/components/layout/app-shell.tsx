@@ -1,49 +1,34 @@
-import Link from "next/link";
-import { ClipboardCheck, Clock, History, Home, Inbox, ListTodo, Settings, Sparkles } from "lucide-react";
+import { MobileNavigation } from "@/components/layout/mobile-nav";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Wordmark } from "@/components/layout/wordmark";
+import { PageTransition } from "@/components/layout/page-transition";
 import { requireUser } from "@/lib/auth/session";
-
-const nav = [
-  { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/events", label: "Events", icon: ClipboardCheck },
-  { href: "/tasks", label: "Tasks", icon: ListTodo },
-  { href: "/waiting", label: "Waiting", icon: Clock },
-  { href: "/approvals", label: "Approvals", icon: Sparkles },
-  { href: "/history", label: "History", icon: History },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
 
 export default async function AppShell({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
-      <aside className="border-b border-border bg-card/70 lg:min-h-screen lg:border-b-0 lg:border-r">
-        <div className="flex items-center justify-between px-5 py-4 lg:block lg:space-y-8 lg:px-6 lg:py-7">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center bg-primary text-primary-foreground">
-              <Inbox className="h-4 w-4" />
-            </span>
-            <span className="font-semibold">Life Admin</span>
-          </Link>
-          <div className="hidden text-sm text-muted-foreground lg:block">{user.email}</div>
-        </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:block lg:space-y-1 lg:px-4">
-          {nav.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex shrink-0 items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+    <div className="min-h-screen bg-canvas lg:grid lg:grid-cols-[236px_1fr]">
+      {/* Desktop: a flat column on the canvas, separated by one hairline. */}
+      <aside className="sticky top-0 hidden h-screen border-r border-hairline lg:block">
+        <Sidebar user={user} />
       </aside>
-      <main className="min-w-0 px-5 py-6 md:px-8 lg:px-10">{children}</main>
+
+      {/* Mobile: a compact top bar, with navigation living at the bottom. */}
+      <header className="sticky top-0 z-30 flex h-14 items-center border-b border-hairline bg-canvas/95 px-4 backdrop-blur-sm lg:hidden">
+        <Wordmark />
+      </header>
+
+      <main
+        id="main"
+        className="min-w-0 px-4 pb-24 pt-6 sm:px-6 lg:px-10 lg:pb-16 lg:pt-9"
+      >
+        <div className="mx-auto w-full max-w-[1200px]">
+          <PageTransition>{children}</PageTransition>
+        </div>
+      </main>
+
+      <MobileNavigation />
     </div>
   );
 }
