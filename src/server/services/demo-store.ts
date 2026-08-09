@@ -1,7 +1,11 @@
+import { addDays } from "date-fns";
+
 import type {
   ActivityRecord,
   DashboardData,
+  LifeEventDetail,
   LifeEventRecord,
+  LifeEventSummary,
   ProposalRecord,
   ReminderRecord,
   TaskRecord,
@@ -119,6 +123,8 @@ function createInitialStore(): Store {
       expectedBy: "2026-08-21",
       followUpDate: "2026-08-14",
       status: "waiting",
+      createdAt: addDays(now, -3).toISOString(),
+      resolvedAt: null,
     },
     {
       id: "waiting-recruiter",
@@ -129,6 +135,8 @@ function createInitialStore(): Store {
       expectedBy: null,
       followUpDate: "2026-08-12",
       status: "waiting",
+      createdAt: addDays(now, -9).toISOString(),
+      resolvedAt: null,
     },
   ],
   reminders: [],
@@ -153,17 +161,83 @@ function id(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+/** Earliest due date first; undated tasks sink to the bottom of the list. */
+function byDueDate(a: TaskRecord, b: TaskRecord) {
+  if (a.dueDate === b.dueDate) return 0;
+  if (!a.dueDate) return 1;
+  if (!b.dueDate) return -1;
+  return a.dueDate < b.dueDate ? -1 : 1;
+}
+
+function summarizeEvent(event: LifeEventRecord): LifeEventSummary {
+  const tasks = store.tasks.filter((task) => task.lifeEventId === event.id);
+  const open = tasks.filter((task) => task.status !== "completed").sort(byDueDate);
+
+  return {
+    ...event,
+    totalTasks: tasks.length,
+    completedTasks: tasks.filter((task) => task.status === "completed").length,
+    nextTask: open[0] ?? null,
+    waitingCount: store.waiting.filter(
+      (item) => item.lifeEventId === event.id && item.status === "waiting",
+    ).length,
+  };
+}
+
 export function getDemoDashboard(): DashboardData {
   return {
     profile: store.profile,
-    today: store.tasks.filter((task) => task.dueDate === today && task.status !== "completed"),
-    upcoming: store.tasks.filter((task) => task.status !== "completed" && task.dueDate !== today),
+    today: store.tasks
+      .filter((task) => task.dueDate === today && task.status !== "completed")
+      .sort(byDueDate),
+    upcoming: store.tasks
+      .filter((task) => task.status !== "completed" && task.dueDate !== today)
+      .sort(byDueDate),
     waiting: store.waiting.filter((item) => item.status === "waiting"),
-    lifeEvents: store.events.filter((event) => event.status === "active"),
+    lifeEvents: store.events.filter((event) => event.status === "active").map(summarizeEvent),
     proposals: store.proposals.filter((proposal) => proposal.status === "pending"),
     recentlyCompleted: store.tasks.filter((task) => task.status === "completed"),
     activity: store.activity,
   };
+}
+
+export function listDemoWaiting() {
+  return store.waiting;
+}
+
+export function listDemoTasks() {
+  return [...store.tasks].sort(byDueDate);
+}
+
+export function updateDemoProfile(profile: DashboardData["profile"]) {
+  store.profile = profile;
+  store.activity.unshift({
+    id: id("activity"),
+    action: "updated",
+    entityType: "profile",
+    entityId: "profile",
+    description: "Updated Life Admin preferences.",
+    createdAt: new Date().toISOString(),
+  });
+  return store.profile;
+}
+
+export function resolveDemoWaitingItem(waitingId: string) {
+  const item = store.waiting.find((entry) => entry.id === waitingId);
+  if (!item) throw new Error("Waiting item not found.");
+  if (item.status === "resolved") return item;
+
+  item.status = "resolved";
+  item.resolvedAt = new Date().toISOString();
+  store.activity.unshift({
+    id: id("activity"),
+    action: "completed",
+    entityType: "waiting_item",
+    entityId: item.id,
+    description: `Resolved “${item.title}”.`,
+    createdAt: new Date().toISOString(),
+  });
+  return item;
 }
 
 export function getDemoProposal(proposalId: string) {
@@ -174,12 +248,29 @@ export function listDemoProposals() {
   return store.proposals;
 }
 
-export function listDemoEvents() {
-  return store.events;
+export function listDemoEvents(): LifeEventSummary[] {
+  return store.events.map(summarizeEvent);
 }
 
-export function getDemoEvent(eventId: string) {
-  return store.events.find((event) => event.id === eventId) ?? null;
+export function getDemoEvent(eventId: string): LifeEventDetail | null {
+  const event = store.events.find((entry) => entry.id === eventId);
+  if (!event) return null;
+
+  return {
+    ...event,
+    tasks: store.tasks.filter((task) => task.lifeEventId === eventId).sort(byDueDate),
+    reminders: store.reminders.filter((reminder) => reminder.lifeEventId === eventId),
+    waiting: store.waiting.filter((item) => item.lifeEventId === eventId),
+    activity: store.activity.filter((entry) => relatedIds(eventId).has(entry.entityId)),
+  };
+}
+
+/** The event plus everything hanging off it, so its history reads completely. */
+function relatedIds(eventId: string) {
+  const ids = new Set<string>([eventId]);
+  store.tasks.forEach((task) => task.lifeEventId === eventId && ids.add(task.id));
+  store.waiting.forEach((item) => item.lifeEventId === eventId && ids.add(item.id));
+  return ids;
 }
 
 export function createDemoProposal(originalInput: string, proposedPlanJson: AgentProposal, clarificationQuestion?: string) {
@@ -244,6 +335,19 @@ export function approveDemoProposal(proposalId: string, editedProposal: AgentPro
       expectedBy: item.expectedBy ?? null,
       followUpDate: item.followUpDate ?? null,
       status: "waiting",
+      createdAt: new Date().toISOString(),
+      resolvedAt: null,
+    });
+  });
+
+  editedProposal.reminders.forEach((reminder) => {
+    store.reminders.unshift({
+      id: id("reminder"),
+      taskId: null,
+      lifeEventId: eventId,
+      title: reminder.title,
+      remindAt: reminder.remindAt,
+      status: "scheduled",
     });
   });
 
@@ -256,6 +360,14 @@ export function approveDemoProposal(proposalId: string, editedProposal: AgentPro
     entityType: "agent_proposal",
     entityId: proposal.id,
     description: `Approved “${editedProposal.lifeEvent.title}” and saved its tasks.`,
+    createdAt: new Date().toISOString(),
+  });
+  store.activity.unshift({
+    id: id("activity"),
+    action: "created",
+    entityType: "life_event",
+    entityId: eventId,
+    description: `Created “${editedProposal.lifeEvent.title}” from an approved plan.`,
     createdAt: new Date().toISOString(),
   });
 
