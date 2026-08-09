@@ -1,21 +1,34 @@
-import { Section } from "@/components/life-admin/section";
+import { PageHeader } from "@/components/life-admin/page-header";
+import { ProfileForm } from "@/components/settings/profile-form";
 import { getDashboardData } from "@/server/services/life-admin";
 
 export default async function SettingsPage() {
   const data = await getDashboardData();
+
   return (
-    <div className="mx-auto max-w-4xl space-y-5">
-      <h1 className="text-3xl font-semibold">Settings</h1>
-      <Section title="Profile and reminders">
-        <div className="grid gap-4 md:grid-cols-3">
-          <div><p className="text-sm text-muted-foreground">Name</p><p className="font-medium">{data.profile.name}</p></div>
-          <div><p className="text-sm text-muted-foreground">Timezone</p><p className="font-medium">{data.profile.timezone}</p></div>
-          <div><p className="text-sm text-muted-foreground">Reminder preference</p><p className="font-medium">{data.profile.reminderPreference}</p></div>
+    <div className="max-w-2xl space-y-9">
+      <PageHeader title="Settings" description="How Life Admin greets you and when it reminds you." />
+
+      <section>
+        <h2 className="type-section border-b border-hairline pb-2.5">Profile</h2>
+        <div className="pt-5">
+          <ProfileForm profile={data.profile} />
         </div>
-      </Section>
-      <Section title="Privacy">
-        <p className="text-sm text-muted-foreground">Life Admin does not store credentials, government ID numbers, or banking details. External writes are intentionally out of scope for this MVP.</p>
-      </Section>
+      </section>
+
+      <section>
+        <h2 className="type-section border-b border-hairline pb-2.5">Privacy</h2>
+        <div className="space-y-3 pt-4">
+          <p className="type-body text-body">
+            Life Admin does not store credentials, government ID numbers, or banking details, and it
+            never contacts a company on your behalf.
+          </p>
+          <p className="type-body text-body">
+            The agent only drafts plans. Every plan waits for your approval before anything is
+            saved.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
