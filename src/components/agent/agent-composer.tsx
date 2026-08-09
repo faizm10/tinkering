@@ -113,6 +113,102 @@ export function AgentComposer({
     inputRef.current?.focus();
   }
 
+  const statusPanel = pending ? (
+    <motion.div
+      key="pending"
+      variants={reduceMotion ? undefined : collapseVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="overflow-hidden border-t border-hairline bg-canvas-soft"
+    >
+      <div className="p-4 sm:px-5">
+        <AgentTimeline stages={["understanding"]} activeStage="understanding" />
+        <p className="type-meta mt-2">Reading your situation and drafting a plan.</p>
+      </div>
+    </motion.div>
+  ) : error ? (
+    <motion.div
+      key="error"
+      variants={reduceMotion ? undefined : collapseVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="overflow-hidden border-t border-hairline"
+    >
+      <p id={`${fieldId}-error`} role="alert" className="p-4 text-[0.875rem] text-error sm:px-5">
+        {error}
+      </p>
+    </motion.div>
+  ) : result ? (
+    <motion.div
+      key="result"
+      variants={reduceMotion ? undefined : collapseVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="overflow-hidden border-t border-hairline bg-canvas-soft"
+    >
+      <div className="space-y-3 p-4 sm:px-5">
+        <AgentTimeline stages={result.stages} />
+
+        {result.clarificationQuestion ? (
+          <div className="space-y-2.5">
+            <p className="type-body text-ink">{result.clarificationQuestion}</p>
+            <Textarea
+              ref={clarificationRef}
+              value={clarificationAnswer}
+              onChange={(event) => setClarificationAnswer(event.target.value)}
+              placeholder="Add the missing detail…"
+              className="min-h-16"
+              aria-label="Answer the agent’s question"
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                disabled={clarificationAnswer.trim().length < 2}
+                onClick={() =>
+                  void run({
+                    input,
+                    proposalId: result.proposalId,
+                    clarificationAnswer,
+                  })
+                }
+              >
+                Send detail
+              </Button>
+              <Button size="sm" variant="ghost" onClick={reset}>
+                Start over
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="type-body text-ink">{result.summary}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild size="sm">
+                <Link
+                  href={`/approvals?proposal=${result.proposalId}`}
+                  onClick={() => {
+                    onNavigate?.();
+                    router.refresh();
+                  }}
+                >
+                  Review plan
+                  <ArrowRight className="size-3.5" />
+                </Link>
+              </Button>
+              <Button size="sm" variant="ghost" onClick={reset}>
+                Describe something else
+              </Button>
+            </div>
+            <p className="type-meta">Nothing is saved until you approve it.</p>
+          </>
+        )}
+      </div>
+    </motion.div>
+  ) : null;
+
   return (
     <div className={cn("surface-card overflow-hidden", className)}>
       <div className="p-4 sm:p-5">
@@ -197,107 +293,7 @@ export function AgentComposer({
 
       <div aria-live="polite">
         <AnimatePresence initial={false} mode="wait">
-          {pending ? (
-            <motion.div
-              key="pending"
-              variants={reduceMotion ? undefined : collapseVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="overflow-hidden border-t border-hairline bg-canvas-soft"
-            >
-              <div className="p-4 sm:px-5">
-                <AgentTimeline stages={["understanding"]} activeStage="understanding" />
-                <p className="type-meta mt-2">Reading your situation and drafting a plan.</p>
-              </div>
-            </motion.div>
-          ) : null}
-
-          {error ? (
-            <motion.div
-              key="error"
-              variants={reduceMotion ? undefined : collapseVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="overflow-hidden border-t border-hairline"
-            >
-              <p id={`${fieldId}-error`} role="alert" className="p-4 text-[0.875rem] text-error sm:px-5">
-                {error}
-              </p>
-            </motion.div>
-          ) : null}
-
-          {result && !pending ? (
-            <motion.div
-              key="result"
-              variants={reduceMotion ? undefined : collapseVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="overflow-hidden border-t border-hairline bg-canvas-soft"
-            >
-              <div className="space-y-3 p-4 sm:px-5">
-                <AgentTimeline stages={result.stages} />
-
-                {result.clarificationQuestion ? (
-                  <div className="space-y-2.5">
-                    <p className="type-body text-ink">{result.clarificationQuestion}</p>
-                    <Textarea
-                      ref={clarificationRef}
-                      value={clarificationAnswer}
-                      onChange={(event) => setClarificationAnswer(event.target.value)}
-                      placeholder="Add the missing detail…"
-                      className="min-h-16"
-                      aria-label="Answer the agent’s question"
-                    />
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        size="sm"
-                        disabled={clarificationAnswer.trim().length < 2}
-                        onClick={() =>
-                          void run({
-                            input,
-                            proposalId: result.proposalId,
-                            clarificationAnswer,
-                          })
-                        }
-                      >
-                        Send detail
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={reset}>
-                        Start over
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <p className="type-body text-ink">{result.summary}</p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Button asChild size="sm">
-                        <Link
-                          href={`/approvals?proposal=${result.proposalId}`}
-                          onClick={() => {
-                            onNavigate?.();
-                            router.refresh();
-                          }}
-                        >
-                          Review plan
-                          <ArrowRight className="size-3.5" />
-                        </Link>
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={reset}>
-                        Describe something else
-                      </Button>
-                    </div>
-                    <p className="type-meta">
-                      Nothing is saved until you approve it.
-                    </p>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          ) : null}
+          {statusPanel}
         </AnimatePresence>
       </div>
     </div>
