@@ -195,29 +195,13 @@ export class OpenAIResponsesAdapter implements ModelAdapter {
         outputs.push({ type: "function_call_output", call_id: call.call_id, output: JSON.stringify(log.result) });
       }
 
-      try {
-        response = (await withTimeout(
-          this.client.responses.create({
-            model: env.OPENAI_MODEL,
-            previous_response_id: response.id,
-            input: outputs as never,
-            tools: toolDefinitions as never,
-            parallel_tool_calls: false,
-          }),
-          env.AGENT_TIMEOUT_MS,
-        )) as ResponseLike;
-        usage = response.usage ? { ...response.usage } : usage;
-      } catch (error) {
-        if (error instanceof AgentTimeoutError) throw error;
-        throw new AgentProviderError(error instanceof Error ? error.message : "OpenAI continuation failed.");
-      }
-
       const finalized = toolCalls.findLast((call) => call.name === "finalize_proposal")?.result as { proposal?: AgentProposal } | undefined;
       if (finalized?.proposal) {
         progress.push("validating", "ready");
         progressEvents.push(progressEvent(context.runId, "validating", "Validating the proposal."), progressEvent(context.runId, "ready", "Ready for review."));
         return { proposal: agentProposalSchema.parse(finalized.proposal), toolCalls, stepCount: step, progress, progressEvents, usage };
       }
+
       const clarification = toolCalls.findLast((call) => call.name === "ask_clarification")?.result as { question?: string } | undefined;
       if (clarification?.question) {
         const resolved = resolveDateExpression(input, profile.timezone);
@@ -242,6 +226,38 @@ export class OpenAIResponsesAdapter implements ModelAdapter {
         progress.push("awaiting_clarification");
         progressEvents.push(progressEvent(context.runId, "awaiting_clarification", "Waiting for one detail."));
         return { proposal: draft, toolCalls, stepCount: step, progress, progressEvents, usage };
+      }
+
+      try {
+        response = (await withTimeout(
+          this.client.responses.create({
+            model: env.OPENAI_MODEL,
+            previous_response_id: response.id,
+            instructions: `${agentInstructions}\n\nUse the function outputs to produce the final validated pending proposal JSON now. Do not call more tools.`,
+            input: [
+              ...outputs,
+              {
+                role: "user",
+                content: "Return the final proposal JSON now. Do not call more tools.",
+              },
+            ] as never,
+            tool_choice: "none",
+            parallel_tool_calls: false,
+            text: {
+              format: {
+                type: "json_schema",
+                name: "sonae_agent_proposal",
+                strict: true,
+                schema: proposalJsonSchema(),
+              },
+            },
+          }),
+          env.AGENT_TIMEOUT_MS,
+        )) as ResponseLike;
+        usage = response.usage ? { ...response.usage } : usage;
+      } catch (error) {
+        if (error instanceof AgentTimeoutError) throw error;
+        throw new AgentProviderError(error instanceof Error ? error.message : "OpenAI continuation failed.");
       }
     }
 

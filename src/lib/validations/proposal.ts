@@ -3,7 +3,7 @@ import { z } from "zod";
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD dates.");
 const isoDateTime = z.string().datetime({ offset: true });
 
-export const proposalCategorySchema = z.enum([
+const proposalCategories = [
   "moving",
   "travel",
   "purchase_return",
@@ -16,7 +16,30 @@ export const proposalCategorySchema = z.enum([
   "purchase",
   "follow-up",
   "refund",
-]);
+] as const;
+
+function normalizeProposalCategory(value: unknown) {
+  if (typeof value !== "string") return value;
+  const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const aliases: Record<string, (typeof proposalCategories)[number]> = {
+    move: "moving",
+    relocation: "moving",
+    purchase: "purchase_return",
+    return: "purchase_return",
+    refund: "purchase_return",
+    followup: "follow_up",
+    follow_up: "follow_up",
+    follow: "follow_up",
+    document: "document_renewal",
+    renewal: "document_renewal",
+    home: "home_maintenance",
+    maintenance: "home_maintenance",
+  };
+
+  return aliases[normalized] ?? normalized;
+}
+
+export const proposalCategorySchema = z.preprocess(normalizeProposalCategory, z.enum(proposalCategories));
 
 export const proposalConfidenceSchema = z.enum(["low", "medium", "high"]);
 
