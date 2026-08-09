@@ -1,16 +1,70 @@
+import { PageHeader } from "@/components/life-admin/page-header";
 import { Section } from "@/components/life-admin/section";
-import { TaskRow } from "@/components/dashboard/task-row";
-import { getDashboardData } from "@/server/services/life-admin";
+import { EmptyState } from "@/components/life-admin/states";
+import { TaskGroup } from "@/components/tasks/task-group";
+import { isOverdue, todayISO } from "@/lib/dates";
+import { getAllLifeEvents, getAllTasks } from "@/server/services/life-admin";
 
 export default async function TasksPage() {
-  const data = await getDashboardData();
-  const tasks = [...data.today, ...data.upcoming, ...data.recentlyCompleted];
+  const [tasks, events] = await Promise.all([getAllTasks(), getAllLifeEvents()]);
+  const today = todayISO();
+
+  const open = tasks.filter((task) => task.status !== "completed");
+  const overdue = open.filter((task) => isOverdue(task.dueDate));
+  const dueToday = open.filter((task) => task.dueDate === today);
+  const later = open.filter(
+    (task) => !overdue.includes(task) && !dueToday.includes(task),
+  );
+  const completed = tasks.filter((task) => task.status === "completed");
+
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
-      <h1 className="text-3xl font-semibold">Tasks</h1>
-      <Section title="All tasks" description="Filter controls are ready to extend; this MVP keeps the full list visible.">
-        {tasks.map((task) => <TaskRow key={task.id} task={task} />)}
-      </Section>
+    <div className="space-y-9">
+      <PageHeader
+        title="Tasks"
+        description={
+          open.length
+            ? `${open.length} open ${open.length === 1 ? "task" : "tasks"} across your life events.`
+            : "Everything on your list is done."
+        }
+      />
+
+      {tasks.length === 0 ? (
+        <EmptyState
+          message="No tasks yet."
+          hint="Describe a situation and Life Admin will propose the tasks behind it."
+          action={{ label: "Open the composer", href: "/dashboard" }}
+        />
+      ) : (
+        <div className="space-y-10">
+          {overdue.length ? (
+            <Section title="Overdue" count={overdue.length}>
+              <TaskGroup tasks={overdue} events={events} />
+            </Section>
+          ) : null}
+
+          <Section title="Today" count={dueToday.length}>
+            {dueToday.length ? (
+              <TaskGroup tasks={dueToday} events={events} />
+            ) : (
+              <EmptyState message="You’re clear for today." />
+            )}
+          </Section>
+
+          <Section title="Later" count={later.length}>
+            {later.length ? (
+              <TaskGroup tasks={later} events={events} />
+            ) : (
+              <EmptyState message="Nothing scheduled beyond today." />
+            )}
+          </Section>
+
+          {completed.length ? (
+            <Section title="Completed" count={completed.length}>
+              <TaskGroup tasks={completed} events={events} />
+            </Section>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
