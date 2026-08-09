@@ -43,6 +43,13 @@ export const proposalCategorySchema = z.preprocess(normalizeProposalCategory, z.
 
 export const proposalConfidenceSchema = z.enum(["low", "medium", "high"]);
 
+function clampString(value: unknown, maxLength: number) {
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  if (trimmed.length <= maxLength) return trimmed;
+  return `${trimmed.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
 export const proposalTaskSchema = z.object({
   temporaryId: z.string().trim().min(2).max(60).optional(),
   title: z.string().trim().min(2).max(120),
@@ -74,7 +81,7 @@ export const agentProposalSchema = z
     summary: z.string().trim().min(2).max(500),
     category: proposalCategorySchema.default("general"),
     confidence: proposalConfidenceSchema.default("medium"),
-    assumptions: z.array(z.string().trim().min(2).max(180)).max(5).default([]),
+    assumptions: z.array(z.preprocess((value) => clampString(value, 180), z.string().min(2).max(180))).max(5).default([]),
     lifeEvent: z.object({
       title: z.string().trim().min(2).max(120),
       description: z.string().trim().max(700).default(""),

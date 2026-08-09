@@ -58,7 +58,7 @@ function proposalJsonSchema() {
       summary: { type: "string" },
       category: { type: "string" },
       confidence: { type: "string", enum: ["low", "medium", "high"] },
-      assumptions: { type: "array", items: { type: "string" } },
+      assumptions: { type: "array", maxItems: 5, items: { type: "string", maxLength: 180 } },
       lifeEvent: {
         type: "object",
         additionalProperties: false,
