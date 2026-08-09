@@ -2,6 +2,7 @@ import type { AgentProposal } from "@/lib/validations/proposal";
 
 export type LifeEventRecord = {
   id: string;
+  userId?: string;
   title: string;
   description: string;
   category: string;
@@ -12,6 +13,7 @@ export type LifeEventRecord = {
 
 export type TaskRecord = {
   id: string;
+  userId?: string;
   lifeEventId: string | null;
   title: string;
   description: string;
@@ -24,6 +26,7 @@ export type TaskRecord = {
 
 export type WaitingItemRecord = {
   id: string;
+  userId?: string;
   lifeEventId: string | null;
   title: string;
   description: string;
@@ -39,6 +42,7 @@ export type WaitingItemRecord = {
 
 export type ReminderRecord = {
   id: string;
+  userId?: string;
   taskId: string | null;
   lifeEventId: string | null;
   title: string;
@@ -48,7 +52,9 @@ export type ReminderRecord = {
 
 export type ProposalRecord = {
   id: string;
+  userId?: string;
   originalInput: string;
+  conversationContextJson?: Record<string, unknown>;
   proposedPlanJson: AgentProposal;
   status: "pending" | "approved" | "rejected" | "expired";
   createdAt: string;
@@ -58,11 +64,28 @@ export type ProposalRecord = {
 
 export type ActivityRecord = {
   id: string;
+  userId?: string;
+  actor: "user" | "agent" | "system";
   action: string;
   entityType: string;
   entityId: string;
   description: string;
   createdAt: string;
+};
+
+export type AgentRunRecord = {
+  id: string;
+  userId: string;
+  proposalId: string | null;
+  input: string;
+  provider: "mock" | "openai";
+  model: string;
+  status: "running" | "completed" | "failed" | "awaiting_clarification";
+  stepCount: number;
+  toolCallsJson: Array<Record<string, unknown>>;
+  errorMessage: string | null;
+  startedAt: string;
+  completedAt: string | null;
 };
 
 /** A life event plus everything attached to it, for the detail screen. */

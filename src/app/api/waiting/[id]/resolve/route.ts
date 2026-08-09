@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/auth/session";
-import { resolveDemoWaitingItem } from "@/server/services/demo-store";
+import { resolveWaitingItem } from "@/server/services/waiting-service";
 
 export async function POST(_request: Request, context: { params: Promise<unknown> }) {
   const user = await getCurrentUser();
@@ -7,7 +7,7 @@ export async function POST(_request: Request, context: { params: Promise<unknown
 
   const { id } = (await context.params) as { id: string };
   try {
-    return Response.json({ waitingItem: resolveDemoWaitingItem(id) });
+    return Response.json({ waitingItem: await resolveWaitingItem(id) });
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "Could not resolve this item." },

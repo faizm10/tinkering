@@ -16,7 +16,13 @@ import { cn } from "@/lib/utils";
  * hairline against the content column. The active item is marked by a short
  * ink rule that slides between destinations.
  */
-export function Sidebar({ user }: { user: { name: string; email: string } }) {
+export function Sidebar({
+  user,
+  demoMode = false,
+}: {
+  user: { name: string; email: string };
+  demoMode?: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const reduceMotion = useReducedMotion();
@@ -66,6 +72,11 @@ export function Sidebar({ user }: { user: { name: string; email: string } }) {
       </nav>
 
       <div className="border-t border-hairline px-1 pt-4">
+        {demoMode ? (
+          <span className="type-label mb-2 inline-flex rounded-[var(--radius-control)] border border-hairline bg-surface px-2 py-1 text-muted">
+            Demo mode
+          </span>
+        ) : null}
         <p className="truncate text-sm text-ink">{user.name}</p>
         <p className="type-meta truncate">{user.email}</p>
         <button

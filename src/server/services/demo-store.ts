@@ -144,6 +144,7 @@ function createInitialStore(): Store {
   activity: [
     {
       id: "activity-seed-1",
+      actor: "agent",
       action: "created",
       entityType: "life_event",
       entityId: "event-moving",
@@ -213,6 +214,7 @@ export function updateDemoProfile(profile: DashboardData["profile"]) {
   store.profile = profile;
   store.activity.unshift({
     id: id("activity"),
+    actor: "user",
     action: "updated",
     entityType: "profile",
     entityId: "profile",
@@ -231,6 +233,7 @@ export function resolveDemoWaitingItem(waitingId: string) {
   item.resolvedAt = new Date().toISOString();
   store.activity.unshift({
     id: id("activity"),
+    actor: "user",
     action: "completed",
     entityType: "waiting_item",
     entityId: item.id,
@@ -286,6 +289,7 @@ export function createDemoProposal(originalInput: string, proposedPlanJson: Agen
   store.proposals.unshift(proposal);
   store.activity.unshift({
     id: id("activity"),
+    actor: "agent",
     action: "created",
     entityType: "agent_proposal",
     entityId: proposal.id,
@@ -356,6 +360,7 @@ export function approveDemoProposal(proposalId: string, editedProposal: AgentPro
   proposal.proposedPlanJson = editedProposal;
   store.activity.unshift({
     id: id("activity"),
+    actor: "user",
     action: "approved",
     entityType: "agent_proposal",
     entityId: proposal.id,
@@ -364,6 +369,7 @@ export function approveDemoProposal(proposalId: string, editedProposal: AgentPro
   });
   store.activity.unshift({
     id: id("activity"),
+    actor: "agent",
     action: "created",
     entityType: "life_event",
     entityId: eventId,
@@ -382,6 +388,7 @@ export function rejectDemoProposal(proposalId: string) {
   proposal.reviewedAt = new Date().toISOString();
   store.activity.unshift({
     id: id("activity"),
+    actor: "user",
     action: "rejected",
     entityType: "agent_proposal",
     entityId: proposal.id,
@@ -397,6 +404,7 @@ export function completeDemoTask(taskId: string, completed: boolean) {
   task.completedAt = completed ? new Date().toISOString() : null;
   store.activity.unshift({
     id: id("activity"),
+    actor: "user",
     action: completed ? "completed" : "updated",
     entityType: "task",
     entityId: task.id,

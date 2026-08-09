@@ -39,6 +39,20 @@ const proposeTaskArgs = z.object({
   dueDate: z.string().nullable().optional(),
 });
 
+const proposeReminderArgs = z.object({
+  title: z.string().min(2),
+  remindAt: z.string().datetime({ offset: true }),
+  relatedTaskIndex: z.number().int().min(0).nullable().optional(),
+});
+
+const proposeWaitingItemArgs = z.object({
+  title: z.string().min(2),
+  description: z.string().default(""),
+  waitingOn: z.string().min(2),
+  expectedBy: z.string().nullable().optional(),
+  followUpDate: z.string().nullable().optional(),
+});
+
 const askClarificationArgs = z.object({
   question: z.string().min(2).max(180),
 });
@@ -48,6 +62,30 @@ export const toolDefinitions = [
     type: "function",
     name: "get_current_date",
     description: "Return the current date for the user's timezone.",
+    parameters: { type: "object", additionalProperties: false, properties: {} },
+  },
+  {
+    type: "function",
+    name: "get_user_preferences",
+    description: "Return the user's timezone and default reminder preference.",
+    parameters: { type: "object", additionalProperties: false, properties: {} },
+  },
+  {
+    type: "function",
+    name: "get_upcoming_tasks",
+    description: "Return upcoming user-owned tasks for context.",
+    parameters: { type: "object", additionalProperties: false, properties: {} },
+  },
+  {
+    type: "function",
+    name: "get_active_life_events",
+    description: "Return active user-owned life events for context.",
+    parameters: { type: "object", additionalProperties: false, properties: {} },
+  },
+  {
+    type: "function",
+    name: "get_waiting_items",
+    description: "Return unresolved user-owned waiting items for context.",
     parameters: { type: "object", additionalProperties: false, properties: {} },
   },
   {
@@ -65,6 +103,38 @@ export const toolDefinitions = [
         endDate: { type: ["string", "null"] },
       },
       required: ["title", "description", "category", "startDate", "endDate"],
+    },
+  },
+  {
+    type: "function",
+    name: "propose_reminder",
+    description: "Add a reminder to the temporary proposal.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        title: { type: "string" },
+        remindAt: { type: "string" },
+        relatedTaskIndex: { type: ["number", "null"] },
+      },
+      required: ["title", "remindAt", "relatedTaskIndex"],
+    },
+  },
+  {
+    type: "function",
+    name: "propose_waiting_item",
+    description: "Add an item the user may be waiting on to the temporary proposal.",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        title: { type: "string" },
+        description: { type: "string" },
+        waitingOn: { type: "string" },
+        expectedBy: { type: ["string", "null"] },
+        followUpDate: { type: ["string", "null"] },
+      },
+      required: ["title", "description", "waitingOn", "expectedBy", "followUpDate"],
     },
   },
   {
@@ -103,6 +173,22 @@ export function runTool(name: string, rawArgs: unknown, draft: ProposalDraft) {
     return { currentDate: todayISO() };
   }
 
+  if (name === "get_user_preferences") {
+    return { timezone: "America/Toronto", reminderPreference: "Morning digest" };
+  }
+
+  if (name === "get_upcoming_tasks") {
+    return { tasks: [] };
+  }
+
+  if (name === "get_active_life_events") {
+    return { lifeEvents: [] };
+  }
+
+  if (name === "get_waiting_items") {
+    return { waitingItems: [] };
+  }
+
   if (name === "propose_life_event") {
     const args = proposeLifeEventArgs.parse(rawArgs);
     draft.lifeEvent = args;
@@ -112,6 +198,18 @@ export function runTool(name: string, rawArgs: unknown, draft: ProposalDraft) {
   if (name === "propose_task") {
     const args = proposeTaskArgs.parse(rawArgs);
     draft.tasks.push(args);
+    return { ok: true };
+  }
+
+  if (name === "propose_reminder") {
+    const args = proposeReminderArgs.parse(rawArgs);
+    draft.reminders.push(args);
+    return { ok: true };
+  }
+
+  if (name === "propose_waiting_item") {
+    const args = proposeWaitingItemArgs.parse(rawArgs);
+    draft.waitingItems.push(args);
     return { ok: true };
   }
 

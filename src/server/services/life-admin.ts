@@ -1,40 +1,45 @@
 import "server-only";
 
-import {
-  getDemoDashboard,
-  getDemoEvent,
-  listDemoEvents,
-  listDemoProposals,
-  listDemoTasks,
-  listDemoWaiting,
-  updateDemoProfile,
-} from "@/server/services/demo-store";
+import { requireUser } from "@/lib/auth/session";
+import { getDataRepository } from "@/server/providers";
 import type { DashboardData } from "@/server/services/types";
 
 export async function getDashboardData() {
-  return getDemoDashboard();
+  const user = await requireUser();
+  return getDataRepository().getDashboardData(user.id);
 }
 
 export async function getAllLifeEvents() {
-  return listDemoEvents();
+  const user = await requireUser();
+  return getDataRepository().listLifeEvents(user.id);
 }
 
 export async function getLifeEvent(eventId: string) {
-  return getDemoEvent(eventId);
+  const user = await requireUser();
+  return getDataRepository().getLifeEvent(user.id, eventId);
 }
 
 export async function getAllProposals() {
-  return listDemoProposals();
+  const user = await requireUser();
+  return getDataRepository().listProposals(user.id);
+}
+
+export async function getProposal(proposalId: string) {
+  const user = await requireUser();
+  return getDataRepository().getProposal(user.id, proposalId);
 }
 
 export async function getAllTasks() {
-  return listDemoTasks();
+  const user = await requireUser();
+  return getDataRepository().listTasks(user.id);
 }
 
 export async function getAllWaitingItems() {
-  return listDemoWaiting();
+  const user = await requireUser();
+  return getDataRepository().listWaitingItems(user.id);
 }
 
 export async function saveProfile(profile: DashboardData["profile"]) {
-  return updateDemoProfile(profile);
+  const user = await requireUser();
+  return getDataRepository().updateProfile(user.id, profile);
 }

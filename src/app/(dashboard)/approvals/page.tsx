@@ -6,8 +6,7 @@ import { PageHeader } from "@/components/life-admin/page-header";
 import { Section } from "@/components/life-admin/section";
 import { EmptyState } from "@/components/life-admin/states";
 import { Button } from "@/components/ui/button";
-import { getAllProposals } from "@/server/services/life-admin";
-import { getDemoProposal } from "@/server/services/demo-store";
+import { getAllProposals, getProposal } from "@/server/services/life-admin";
 
 export default async function ApprovalsPage({
   searchParams,
@@ -15,7 +14,7 @@ export default async function ApprovalsPage({
   searchParams: Promise<{ proposal?: string }>;
 }) {
   const { proposal: selectedProposalId } = await searchParams;
-  const selected = selectedProposalId ? getDemoProposal(selectedProposalId) : null;
+  const selected = selectedProposalId ? await getProposal(selectedProposalId) : null;
   const proposals = await getAllProposals();
   const pending = proposals.filter((item) => item.status === "pending");
 

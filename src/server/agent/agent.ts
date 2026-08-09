@@ -1,9 +1,7 @@
 import "server-only";
 
 import { agentProposalSchema, situationInputSchema } from "@/lib/validations/proposal";
-import { getModelAdapter } from "@/server/agent/model-adapter";
-import { createDemoProposal } from "@/server/services/demo-store";
-import { env } from "@/lib/env";
+import { getAgentProvider, getDataRepository } from "@/server/providers";
 
 const rateLimit = new Map<string, { count: number; resetAt: number }>();
 
@@ -19,19 +17,41 @@ export async function createAgentProposal(userId: string, body: unknown) {
     resetAt: window && window.resetAt > now ? window.resetAt : now + 10 * 60 * 1000,
   });
 
-  const adapter = getModelAdapter();
-  const result = await adapter.createProposal(
+  const agent = getAgentProvider();
+  const repository = getDataRepository();
+  const result = await agent.createProposal(
     parsed.clarificationAnswer ? `${parsed.input}\nClarification: ${parsed.clarificationAnswer}` : parsed.input,
   );
   const proposal = agentProposalSchema.parse(result.proposal);
 
-  const record = createDemoProposal(parsed.input, proposal, proposal.clarificationQuestions[0]);
+  const record = await repository.createProposal(userId, {
+    originalInput: parsed.input,
+    proposal,
+    clarificationQuestion: proposal.clarificationQuestions[0],
+    conversationContextJson: {
+      proposalId: parsed.proposalId,
+      clarificationAnswer: parsed.clarificationAnswer,
+    },
+  });
+
+  await repository.recordAgentRun(userId, {
+    proposalId: record.id,
+    input: parsed.input,
+    provider: result.provider,
+    model: result.model,
+    status: proposal.clarificationQuestions.length ? "awaiting_clarification" : "completed",
+    stepCount: result.stepCount,
+    toolCallsJson: result.toolCalls.map((call) => ({ ...call })),
+    errorMessage: null,
+    completedAt: new Date().toISOString(),
+  });
 
   return {
     proposalId: record.id,
     proposal,
-    model: env.OPENAI_MODEL,
+    model: result.model,
     toolCalls: result.toolCalls,
     stepCount: result.stepCount,
+    progress: result.progress,
   };
 }

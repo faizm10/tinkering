@@ -1,13 +1,16 @@
 import "server-only";
 
 import { approvalPayloadSchema } from "@/lib/validations/proposal";
-import { approveDemoProposal, rejectDemoProposal } from "@/server/services/demo-store";
+import { requireUser } from "@/lib/auth/session";
+import { getDataRepository } from "@/server/providers";
 
 export async function approveProposal(proposalId: string, payload: unknown) {
+  const user = await requireUser();
   const parsed = approvalPayloadSchema.parse(payload);
-  return approveDemoProposal(proposalId, parsed.proposal);
+  return getDataRepository().approveProposal(user.id, proposalId, parsed.proposal);
 }
 
 export async function rejectProposal(proposalId: string) {
-  rejectDemoProposal(proposalId);
+  const user = await requireUser();
+  await getDataRepository().rejectProposal(user.id, proposalId);
 }

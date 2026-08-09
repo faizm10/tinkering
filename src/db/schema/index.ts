@@ -219,6 +219,7 @@ export const agentRuns = pgTable(
     userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     proposalId: uuid("proposal_id").references(() => agentProposals.id, { onDelete: "set null" }),
     input: text("input").notNull(),
+    provider: text("provider").notNull().default("mock"),
     status: agentRunStatus("status").notNull().default("running"),
     model: text("model").notNull(),
     stepCount: integer("step_count").notNull().default(0),
@@ -238,6 +239,7 @@ export const activityLogs = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    actor: text("actor").notNull().default("system"),
     action: activityAction("action").notNull(),
     entityType: text("entity_type").notNull(),
     entityId: text("entity_id").notNull(),
