@@ -1,35 +1,82 @@
 import Link from "next/link";
+import { format, parseISO } from "date-fns";
+
 import { ProposalReview } from "@/components/approvals/proposal-review";
-import { EmptyState, Section } from "@/components/life-admin/section";
+import { PageHeader } from "@/components/life-admin/page-header";
+import { Section } from "@/components/life-admin/section";
+import { EmptyState } from "@/components/life-admin/states";
+import { Button } from "@/components/ui/button";
 import { getAllProposals } from "@/server/services/life-admin";
 import { getDemoProposal } from "@/server/services/demo-store";
 
-export default async function ApprovalsPage({ searchParams }: { searchParams: Promise<{ proposal?: string }> }) {
+export default async function ApprovalsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ proposal?: string }>;
+}) {
   const { proposal: selectedProposalId } = await searchParams;
   const selected = selectedProposalId ? getDemoProposal(selectedProposalId) : null;
   const proposals = await getAllProposals();
+  const pending = proposals.filter((item) => item.status === "pending");
+
+  if (selected) {
+    return (
+      <div className="space-y-9">
+        <PageHeader
+          eyebrow="Proposed plan"
+          title={selected.proposedPlanJson.lifeEvent.title}
+          actions={
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/approvals">All plans</Link>
+            </Button>
+          }
+        />
+        <ProposalReview proposalId={selected.id} proposal={selected.proposedPlanJson} />
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5">
-      <h1 className="text-3xl font-semibold">Agent Approvals</h1>
-      {selected ? (
-        <ProposalReview proposalId={selected.id} proposal={selected.proposedPlanJson} />
-      ) : (
-        <Section title="Pending suggestions">
-          {proposals.filter((item) => item.status === "pending").length ? (
-            <div className="divide-y divide-border">
-              {proposals.filter((item) => item.status === "pending").map((proposal) => (
-                <Link key={proposal.id} href={`/approvals?proposal=${proposal.id}`} className="block py-4">
-                  <p className="font-medium">{proposal.proposedPlanJson.lifeEvent.title}</p>
-                  <p className="text-sm text-muted-foreground">{proposal.proposedPlanJson.summary}</p>
+    <div className="space-y-9">
+      <PageHeader
+        title="Approvals"
+        description="Life Admin drafts plans. Nothing is saved until you approve one."
+      />
+
+      <Section title="Waiting for review" count={pending.length}>
+        {pending.length ? (
+          <ul className="divide-y divide-hairline-soft">
+            {pending.map((proposal) => (
+              <li key={proposal.id}>
+                <Link
+                  href={`/approvals?proposal=${proposal.id}`}
+                  className="group/plan flex flex-col gap-1 py-4 sm:flex-row sm:items-baseline sm:gap-6"
+                >
+                  <time
+                    dateTime={proposal.createdAt}
+                    className="type-mono shrink-0 text-muted sm:w-28"
+                  >
+                    {format(parseISO(proposal.createdAt), "MMM d, HH:mm")}
+                  </time>
+                  <div className="min-w-0 flex-1">
+                    <p className="type-card-title">{proposal.proposedPlanJson.lifeEvent.title}</p>
+                    <p className="type-meta mt-0.5">{proposal.proposedPlanJson.summary}</p>
+                  </div>
+                  <span className="type-meta shrink-0 transition-colors duration-[var(--dur-hover)] group-hover/plan:text-ink">
+                    Review
+                  </span>
                 </Link>
-              ))}
-            </div>
-          ) : (
-            <EmptyState>No pending agent suggestions.</EmptyState>
-          )}
-        </Section>
-      )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyState
+            message="No plans waiting for review."
+            hint="Describe a situation and Life Admin will draft one for you to check."
+            action={{ label: "Open the composer", href: "/dashboard" }}
+          />
+        )}
+      </Section>
     </div>
   );
 }
