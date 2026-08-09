@@ -1,18 +1,34 @@
-import { Section } from "@/components/life-admin/section";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
-export default function OnboardingPage() {
+import { PageHeader } from "@/components/life-admin/page-header";
+import { ProfileForm } from "@/components/settings/profile-form";
+import { Button } from "@/components/ui/button";
+import { getDashboardData } from "@/server/services/life-admin";
+
+export default async function OnboardingPage() {
+  const data = await getDashboardData();
+
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
-      <h1 className="text-3xl font-semibold">Set up Life Admin</h1>
-      <Section title="Preferences">
-        <form className="space-y-4">
-          <label className="block text-sm font-medium">Name<input name="name" className="mt-2 w-full border border-input bg-background p-3" defaultValue="Faiz" /></label>
-          <label className="block text-sm font-medium">Timezone<input name="timezone" className="mt-2 w-full border border-input bg-background p-3" defaultValue="America/Toronto" /></label>
-          <label className="block text-sm font-medium">Default reminder preference<input name="reminder" className="mt-2 w-full border border-input bg-background p-3" defaultValue="Morning digest" /></label>
-          <Button type="submit">Save preferences</Button>
-        </form>
-      </Section>
+    <div className="max-w-2xl space-y-9">
+      <PageHeader
+        eyebrow="Step 1 of 1"
+        title="Set up Life Admin"
+        description="Two details now, and every plan the agent drafts will land on the right dates."
+      />
+
+      <section>
+        <h2 className="type-section border-b border-hairline pb-2.5">Preferences</h2>
+        <div className="pt-5">
+          <ProfileForm profile={data.profile} submitLabel="Save and continue" />
+        </div>
+      </section>
+
+      <div className="border-t border-hairline pt-5">
+        <p className="type-meta">You can change any of this later in Settings.</p>
+        <Button asChild variant="ghost" size="sm" className="mt-2 -ml-3">
+          <Link href="/dashboard">Skip to the dashboard</Link>
+        </Button>
+      </div>
     </div>
   );
 }
