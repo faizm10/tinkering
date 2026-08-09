@@ -1,6 +1,6 @@
 import { requireCronSecret } from "@/lib/env";
 import { buildDailyBrief } from "@/server/daily-brief/brief";
-import { getDashboardData } from "@/server/services/life-admin";
+import { getDashboardData } from "@/server/services/sonae";
 
 export async function GET(request: Request) {
   try {

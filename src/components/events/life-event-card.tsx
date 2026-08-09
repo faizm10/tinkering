@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import { LifeEventProgress } from "@/components/events/life-event-progress";
-import { EventStatus } from "@/components/life-admin/status-indicator";
+import { EventStatus } from "@/components/sonae/status-indicator";
 import { formatDateRange } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import type { LifeEventSummary } from "@/server/services/types";

@@ -1,4 +1,4 @@
-import { LoadingState, SkeletonLine } from "@/components/life-admin/states";
+import { LoadingState, SkeletonLine } from "@/components/sonae/states";
 
 /** A log: fixed-width timestamp column, then the sentence. */
 export default function LoadingHistory() {

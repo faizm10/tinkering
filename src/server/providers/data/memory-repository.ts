@@ -242,7 +242,7 @@ export class MemoryDataRepository implements DataRepository {
 
   async updateProfile(userId: string, profile: DashboardData["profile"]) {
     store.profiles[userId] = profile;
-    log(userId, "user", "updated", "profile", "profile", "Updated Life Admin preferences.");
+    log(userId, "user", "updated", "profile", "profile", "Updated Sonae preferences.");
     return profile;
   }
 
@@ -387,6 +387,7 @@ export class MemoryDataRepository implements DataRepository {
       existing.proposedPlanJson = input.proposal;
       existing.conversationContextJson = input.conversationContextJson ?? {};
       existing.clarificationQuestion = input.clarificationQuestion;
+      existing.state = input.clarificationQuestion ? "awaiting_clarification" : "ready_for_review";
       log(userId, "agent", "updated", "agent_proposal", existing.id, input.clarificationQuestion ? "Agent updated the clarification request." : "Agent completed the clarified plan.");
       return existing;
     }
@@ -401,6 +402,7 @@ export class MemoryDataRepository implements DataRepository {
       createdAt: new Date().toISOString(),
       reviewedAt: null,
       clarificationQuestion: input.clarificationQuestion,
+      state: input.clarificationQuestion ? "awaiting_clarification" : "ready_for_review",
     };
     store.proposals.unshift(proposal);
     log(userId, "agent", "created", "agent_proposal", proposal.id, input.clarificationQuestion ? "Agent requested clarification." : "Agent created a plan suggestion.");
@@ -410,6 +412,9 @@ export class MemoryDataRepository implements DataRepository {
   async approveProposal(userId: string, proposalId: string, editedProposal: AgentProposal) {
     const proposal = assertOwns(store.proposals.find((entry) => entry.id === proposalId), userId, "Proposal");
     if (proposal.status !== "pending") throw new Error("This proposal has already been reviewed.");
+    if (proposal.state === "awaiting_clarification" || proposal.proposedPlanJson.clarificationQuestions.length) {
+      throw new Error("This proposal still needs clarification before approval.");
+    }
     const parsed = agentProposalSchema.parse(editedProposal);
 
     const eventId = id("event");
@@ -474,6 +479,7 @@ export class MemoryDataRepository implements DataRepository {
     });
 
     proposal.status = "approved";
+    proposal.state = "approved";
     proposal.reviewedAt = new Date().toISOString();
     proposal.proposedPlanJson = parsed;
     log(userId, "user", "approved", "agent_proposal", proposal.id, `Approved “${parsed.lifeEvent.title}”.`);
@@ -485,6 +491,7 @@ export class MemoryDataRepository implements DataRepository {
     const proposal = assertOwns(store.proposals.find((entry) => entry.id === proposalId), userId, "Proposal");
     if (proposal.status !== "pending") throw new Error("This proposal has already been reviewed.");
     proposal.status = "rejected";
+    proposal.state = "rejected";
     proposal.reviewedAt = new Date().toISOString();
     log(userId, "user", "rejected", "agent_proposal", proposal.id, "Rejected an agent proposal.");
   }

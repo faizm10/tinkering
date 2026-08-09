@@ -89,7 +89,7 @@ export function HeroDemo() {
   return (
     <div className="surface-card overflow-hidden">
       <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-2.5">
-        <span className="type-mono text-muted">Life Admin — new situation</span>
+        <span className="type-mono text-muted">Sonae — new situation</span>
         <button
           type="button"
           onClick={play}
@@ -173,14 +173,14 @@ export function HeroDemo() {
                 className="flex flex-wrap items-center gap-2 border-t border-hairline-soft pt-4"
               >
                 <span className="inline-flex h-8 items-center rounded-[var(--radius-control)] bg-primary px-3 text-[0.8125rem] font-medium text-on-primary">
-                  Add to Life Admin
+                  Add to Sonae
                 </span>
                 <span className="inline-flex h-8 items-center rounded-[var(--radius-control)] border border-hairline-strong bg-surface px-3 text-[0.8125rem] font-medium text-ink">
                   Discard plan
                 </span>
               </div>
               <p className="type-meta">
-                Review this plan before adding it. Life Admin will not take external actions
+                Review this plan before adding it. Sonae will not take external actions
                 without your approval.
               </p>
             </motion.div>

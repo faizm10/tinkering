@@ -4,8 +4,8 @@ import Link from "next/link";
 import { ProsePage, ProseSection } from "@/components/marketing/prose-page";
 
 export const metadata: Metadata = {
-  title: "Contact — Life Admin",
-  description: "How to reach the people building Life Admin.",
+  title: "Contact — Sonae",
+  description: "How to reach the people building Sonae.",
 };
 
 export default function ContactPage() {
@@ -13,7 +13,7 @@ export default function ContactPage() {
     <ProsePage
       eyebrow="Contact"
       title="Get in touch."
-      intro="Life Admin is early, and feedback from people actually using it shapes what gets built next."
+      intro="Sonae is early, and feedback from people actually using it shapes what gets built next."
     >
       <ProseSection heading="Support channel">
         {/* Placeholder: no public inbox is published for this project yet.
@@ -27,7 +27,7 @@ export default function ContactPage() {
 
       <ProseSection heading="Already have an account?">
         <p>
-          Your activity history records every change Life Admin has made to your workspace, which
+          Your activity history records every change Sonae has made to your workspace, which
           is usually the quickest way to answer &ldquo;what happened to this plan?&rdquo;.
         </p>
         <p>

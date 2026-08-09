@@ -16,7 +16,7 @@ import { heroPlan } from "@/components/marketing/demo-data";
 const steps = [
   {
     number: "01",
-    title: "Tell Life Admin what’s happening",
+    title: "Tell Sonae what’s happening",
     body: "One sentence, in whatever words you would use. No forms, no categories to pick, no project to set up first.",
   },
   {

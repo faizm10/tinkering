@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { DateInput, Field, Input, Select, Textarea } from "@/components/ui/field";
 import { formatShortDate } from "@/lib/dates";
 import { collapseVariants, itemVariants, listVariants, transition } from "@/lib/motion";
-import type { AgentProposal } from "@/lib/validations/proposal";
+import type { AgentProposal, ProposalCategory } from "@/lib/validations/proposal";
 
 /**
  * A proposal is presented as an editable plan, not a chat reply. Every field
@@ -49,7 +49,7 @@ export function ProposalReview({
       });
       const data = await response.json();
       if (!response.ok) {
-        setError(data.error ?? "Life Admin could not save this plan.");
+        setError(data.error ?? "Sonae could not save this plan.");
         return;
       }
       router.push(`/events/${data.eventId}`);
@@ -63,7 +63,7 @@ export function ProposalReview({
       const response = await fetch(`/api/approvals/${proposalId}/reject`, { method: "POST" });
       if (!response.ok) {
         const data = await response.json();
-        setError(data.error ?? "Life Admin could not discard this plan.");
+        setError(data.error ?? "Sonae could not discard this plan.");
         return;
       }
       router.push("/approvals");
@@ -88,7 +88,7 @@ export function ProposalReview({
           variants={reduceMotion ? undefined : itemVariants}
           className="surface-card p-4 sm:p-5"
         >
-          <h2 className="type-label">Life Admin needs one detail</h2>
+          <h2 className="type-label">Sonae needs one detail</h2>
           <p className="type-body mt-1.5 text-ink">{draft.clarificationQuestions[0]}</p>
           <p className="type-meta mt-2">
             Answer it in the composer on the dashboard, or fill in the dates below yourself and
@@ -124,7 +124,7 @@ export function ProposalReview({
               onChange={(event) =>
                 setDraft({
                   ...draft,
-                  lifeEvent: { ...draft.lifeEvent, category: event.target.value },
+                  lifeEvent: { ...draft.lifeEvent, category: event.target.value as ProposalCategory },
                 })
               }
             />
@@ -357,7 +357,7 @@ export function ProposalReview({
         className="sticky bottom-20 z-20 border-t border-hairline bg-canvas/95 pt-4 backdrop-blur-sm lg:bottom-0 lg:pb-4"
       >
         <p className="type-meta max-w-2xl">
-          Review this plan before adding it. Life Admin will not take external actions without your
+          Review this plan before adding it. Sonae will not take external actions without your
           approval.
         </p>
         {error ? (
@@ -367,7 +367,7 @@ export function ProposalReview({
         ) : null}
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <Button onClick={approve} disabled={pending || blockedByQuestion}>
-            {pending ? "Adding…" : "Add to Life Admin"}
+            {pending ? "Adding…" : "Add to Sonae"}
           </Button>
           <Button variant="secondary" onClick={discard} disabled={pending}>
             Discard plan

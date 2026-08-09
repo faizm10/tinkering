@@ -80,7 +80,7 @@ export function AgentComposer({
       const data: AgentResponse = await response.json();
 
       if (!response.ok) {
-        setError(data.error ?? "Life Admin could not draft a plan. Try describing the situation again.");
+        setError(data.error ?? "Sonae could not draft a plan. Try describing the situation again.");
         return;
       }
 
@@ -100,7 +100,7 @@ export function AgentComposer({
         requestAnimationFrame(() => clarificationRef.current?.focus());
       }
     } catch {
-      setError("Life Admin could not reach the planning service. Check your connection and try again.");
+      setError("Sonae could not reach the planning service. Check your connection and try again.");
     } finally {
       setPending(false);
     }
@@ -136,7 +136,7 @@ export function AgentComposer({
               void run({ input });
             }
           }}
-          placeholder="Tell Life Admin what’s happening…"
+          placeholder="Tell Sonae what’s happening…"
           aria-describedby={error ? `${fieldId}-error` : undefined}
           aria-invalid={error ? true : undefined}
           className="mt-2.5 min-h-24 border-hairline text-[0.9375rem] leading-relaxed"

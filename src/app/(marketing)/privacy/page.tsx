@@ -3,15 +3,15 @@ import type { Metadata } from "next";
 import { ProsePage, ProseSection } from "@/components/marketing/prose-page";
 
 export const metadata: Metadata = {
-  title: "Privacy — Life Admin",
-  description: "What Life Admin stores, what it sends to a model, and what it refuses to hold.",
+  title: "Privacy — Sonae",
+  description: "What Sonae stores, what it sends to a model, and what it refuses to hold.",
 };
 
 export default function PrivacyPage() {
   return (
     <ProsePage
       eyebrow="Privacy"
-      title="What Life Admin stores."
+      title="What Sonae stores."
       intro="A plain description of how your data is handled. This is a summary of current product behaviour, not a legal privacy notice."
     >
       <ProseSection heading="What is stored">
@@ -28,15 +28,15 @@ export default function PrivacyPage() {
         </p>
       </ProseSection>
 
-      <ProseSection heading="What Life Admin will not hold">
+      <ProseSection heading="What Sonae will not hold">
         <p>
-          Life Admin does not ask for and does not store passwords to other services, government
+          Sonae does not ask for and does not store passwords to other services, government
           identification numbers, or banking and card details. If a situation you describe contains
           one, remove it before saving the plan.
         </p>
       </ProseSection>
 
-      <ProseSection heading="What Life Admin will not do">
+      <ProseSection heading="What Sonae will not do">
         <p>
           It does not send email on your behalf, make purchases, cancel services, or share your
           plans with anyone else. There is no shared or household workspace today — every workspace

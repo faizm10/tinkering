@@ -10,7 +10,7 @@ import { heroPlan } from "@/components/marketing/demo-data";
 const guarantees = [
   {
     title: "Plans stay suggestions until you approve them",
-    body: "Nothing the agent proposes is written to your workspace until you press Add to Life Admin.",
+    body: "Nothing the agent proposes is written to your workspace until you press Add to Sonae.",
   },
   {
     title: "Every task and date is editable",
@@ -18,7 +18,7 @@ const guarantees = [
   },
   {
     title: "External actions require your confirmation",
-    body: "Life Admin does not send email, make purchases, cancel services or delete anything on your behalf.",
+    body: "Sonae does not send email, make purchases, cancel services or delete anything on your behalf.",
   },
   {
     title: "Activity history shows what changed",
@@ -45,7 +45,7 @@ export function TrustSection() {
       <div className="surface-card overflow-hidden">
         <div className="flex items-center gap-2 border-b border-hairline px-4 py-2.5">
           <span className="size-1.5 rounded-full bg-hairline-strong" aria-hidden />
-          <span className="type-mono text-muted">Life Admin — proposed plan</span>
+          <span className="type-mono text-muted">Sonae — proposed plan</span>
         </div>
 
         <div className="space-y-5 p-4 sm:p-5">
@@ -78,12 +78,12 @@ export function TrustSection() {
 
           <div className="space-y-3 border-t border-hairline-soft pt-4">
             <p className="type-meta">
-              Review this plan before adding it. Life Admin will not take external actions without
+              Review this plan before adding it. Sonae will not take external actions without
               your approval.
             </p>
             <div aria-hidden className="flex flex-wrap gap-2">
               <span className="inline-flex h-10 items-center rounded-[var(--radius-control)] bg-primary px-[18px] text-sm font-medium text-on-primary">
-                Add to Life Admin
+                Add to Sonae
               </span>
               <span className="inline-flex h-10 items-center rounded-[var(--radius-control)] border border-hairline-strong bg-surface px-[18px] text-sm font-medium text-ink">
                 Discard plan

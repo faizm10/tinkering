@@ -1,9 +1,9 @@
-import { PageHeader } from "@/components/life-admin/page-header";
-import { Section } from "@/components/life-admin/section";
-import { EmptyState } from "@/components/life-admin/states";
+import { PageHeader } from "@/components/sonae/page-header";
+import { Section } from "@/components/sonae/section";
+import { EmptyState } from "@/components/sonae/states";
 import { TaskGroup } from "@/components/tasks/task-group";
 import { isOverdue, todayISO } from "@/lib/dates";
-import { getAllLifeEvents, getAllTasks } from "@/server/services/life-admin";
+import { getAllLifeEvents, getAllTasks } from "@/server/services/sonae";
 
 export default async function TasksPage() {
   const [tasks, events] = await Promise.all([getAllTasks(), getAllLifeEvents()]);
@@ -31,7 +31,7 @@ export default async function TasksPage() {
       {tasks.length === 0 ? (
         <EmptyState
           message="No tasks yet."
-          hint="Describe a situation and Life Admin will propose the tasks behind it."
+          hint="Describe a situation and Sonae will propose the tasks behind it."
           action={{ label: "Open the composer", href: "/dashboard" }}
         />
       ) : (

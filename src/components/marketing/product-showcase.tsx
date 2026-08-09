@@ -10,7 +10,7 @@ export function ProductShowcase() {
     <div className="surface-card overflow-hidden">
       <div className="flex items-center gap-2 border-b border-hairline px-4 py-2.5">
         <span className="size-1.5 rounded-full bg-hairline-strong" aria-hidden />
-        <span className="type-mono text-muted">Life Admin — Dashboard</span>
+        <span className="type-mono text-muted">Sonae — Dashboard</span>
       </div>
 
       <div className="bg-canvas p-4 sm:p-6 lg:p-8">

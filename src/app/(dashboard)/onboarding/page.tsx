@@ -1,9 +1,9 @@
 import Link from "next/link";
 
-import { PageHeader } from "@/components/life-admin/page-header";
+import { PageHeader } from "@/components/sonae/page-header";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { Button } from "@/components/ui/button";
-import { getDashboardData } from "@/server/services/life-admin";
+import { getDashboardData } from "@/server/services/sonae";
 
 export default async function OnboardingPage() {
   const data = await getDashboardData();
@@ -12,7 +12,7 @@ export default async function OnboardingPage() {
     <div className="max-w-2xl space-y-9">
       <PageHeader
         eyebrow="Step 1 of 1"
-        title="Set up Life Admin"
+        title="Set up Sonae"
         description="Two details now, and every plan the agent drafts will land on the right dates."
       />
 

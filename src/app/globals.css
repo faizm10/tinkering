@@ -2,13 +2,13 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Life Admin is a single light system (design.md defines no dark palette).
+/* Sonae is a single light system (design.md defines no dark palette).
    Binding `dark:` to a class that is never applied keeps shadcn's built-in
    dark variants inert instead of letting OS dark mode half-apply them. */
 @custom-variant dark (&:is(.dark *));
 
 /* ------------------------------------------------------------------
-   Life Admin design tokens
+   Sonae design tokens
    Derived from design.md. Warm cream canvas, warm near-black ink,
    a single orange action colour, hairline-only depth.
    Never write a raw hex in a component — use these.

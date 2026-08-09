@@ -2,11 +2,11 @@ import Link from "next/link";
 import { format, parseISO } from "date-fns";
 
 import { ProposalReview } from "@/components/approvals/proposal-review";
-import { PageHeader } from "@/components/life-admin/page-header";
-import { Section } from "@/components/life-admin/section";
-import { EmptyState } from "@/components/life-admin/states";
+import { PageHeader } from "@/components/sonae/page-header";
+import { Section } from "@/components/sonae/section";
+import { EmptyState } from "@/components/sonae/states";
 import { Button } from "@/components/ui/button";
-import { getAllProposals, getProposal } from "@/server/services/life-admin";
+import { getAllProposals, getProposal } from "@/server/services/sonae";
 
 export default async function ApprovalsPage({
   searchParams,
@@ -39,7 +39,7 @@ export default async function ApprovalsPage({
     <div className="space-y-9">
       <PageHeader
         title="Approvals"
-        description="Life Admin drafts plans. Nothing is saved until you approve one."
+        description="Sonae drafts plans. Nothing is saved until you approve one."
       />
 
       <Section title="Waiting for review" count={pending.length}>
@@ -71,7 +71,7 @@ export default async function ApprovalsPage({
         ) : (
           <EmptyState
             message="No plans waiting for review."
-            hint="Describe a situation and Life Admin will draft one for you to check."
+            hint="Describe a situation and Sonae will draft one for you to check."
             action={{ label: "Open the composer", href: "/dashboard" }}
           />
         )}

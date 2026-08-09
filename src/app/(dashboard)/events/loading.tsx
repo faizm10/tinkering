@@ -1,4 +1,4 @@
-import { LoadingState, SkeletonBlock, SkeletonLine } from "@/components/life-admin/states";
+import { LoadingState, SkeletonBlock, SkeletonLine } from "@/components/sonae/states";
 
 /** A grid of event cards, so the layout does not jump when they arrive. */
 export default function LoadingEvents() {

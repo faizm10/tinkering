@@ -4,13 +4,13 @@ import { ArrowRight } from "lucide-react";
 import { AgentComposer } from "@/components/agent/agent-composer";
 import { DailyBrief } from "@/components/dashboard/daily-brief";
 import { LifeEventCard } from "@/components/events/life-event-card";
-import { Section } from "@/components/life-admin/section";
-import { EmptyState } from "@/components/life-admin/states";
+import { Section } from "@/components/sonae/section";
+import { EmptyState } from "@/components/sonae/states";
 import { TaskGroup } from "@/components/tasks/task-group";
 import { WaitingItem } from "@/components/waiting/waiting-item";
 import { Button } from "@/components/ui/button";
 import { buildDailyBrief } from "@/server/daily-brief/brief";
-import { getDashboardData } from "@/server/services/life-admin";
+import { getDashboardData } from "@/server/services/sonae";
 
 export default async function DashboardPage() {
   const data = await getDashboardData();
@@ -99,7 +99,7 @@ export default async function DashboardPage() {
             ))}
           </div>
         ) : (
-          <EmptyState message="Tell Life Admin what’s happening and it will organize the details." />
+          <EmptyState message="Tell Sonae what’s happening and it will organize the details." />
         )}
       </Section>
 

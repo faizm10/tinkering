@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 
-import { DateDisplay } from "@/components/life-admin/date-display";
-import { PriorityLabel } from "@/components/life-admin/status-indicator";
+import { DateDisplay } from "@/components/sonae/date-display";
+import { PriorityLabel } from "@/components/sonae/status-indicator";
 import { transition } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { TaskRecord } from "@/server/services/types";
@@ -121,7 +121,7 @@ export function TaskRow({
           ) : null}
           {task.source === "agent" ? (
             <span className="type-meta opacity-0 transition-opacity duration-[var(--dur-hover)] group-hover/task:opacity-100 group-focus-within/task:opacity-100">
-              Suggested by Life Admin
+              Suggested by Sonae
             </span>
           ) : null}
         </div>

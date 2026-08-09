@@ -1,5 +1,5 @@
 import { AgentTimeline } from "@/components/agent/agent-timeline";
-import { LoadingState, SkeletonLine } from "@/components/life-admin/states";
+import { LoadingState, SkeletonLine } from "@/components/sonae/states";
 
 /**
  * The one loading state that shows the agent stage palette: the user is

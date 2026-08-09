@@ -10,7 +10,7 @@ import { easing, stagger } from "@/lib/motion";
 
 /**
  * The transformation, shown rather than described: unsorted fragments on the
- * left, the four things Life Admin sorts them into on the right.
+ * left, the four things Sonae sorts them into on the right.
  */
 const buckets = [
   { label: "Events", detail: "Move to New House · Aug 9 – Sep 1" },
@@ -57,7 +57,7 @@ export function ProblemTransform() {
       </div>
 
       <div>
-        <p className="type-label">What Life Admin keeps</p>
+        <p className="type-label">What Sonae keeps</p>
         <ul className="surface-card mt-3 divide-y divide-hairline-soft">
           {buckets.map((bucket, index) => (
             <motion.li

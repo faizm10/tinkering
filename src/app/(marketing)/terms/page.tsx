@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { ProsePage, ProseSection } from "@/components/marketing/prose-page";
 
 export const metadata: Metadata = {
-  title: "Terms — Life Admin",
-  description: "The terms on which Life Admin is offered.",
+  title: "Terms — Sonae",
+  description: "The terms on which Sonae is offered.",
 };
 
 export default function TermsPage() {
@@ -12,11 +12,11 @@ export default function TermsPage() {
     <ProsePage
       eyebrow="Terms"
       title="Terms of use."
-      intro="A plain summary of what you can expect from Life Admin and what it expects from you. This is a product summary, not a legal agreement."
+      intro="A plain summary of what you can expect from Sonae and what it expects from you. This is a product summary, not a legal agreement."
     >
       <ProseSection heading="The service">
         <p>
-          Life Admin drafts plans from what you describe and keeps track of them once you approve
+          Sonae drafts plans from what you describe and keeps track of them once you approve
           them. It is early software and features may change.
         </p>
       </ProseSection>
@@ -32,13 +32,13 @@ export default function TermsPage() {
         <p>
           Plans are generated suggestions. They can be wrong about a date, miss a step, or propose
           something that does not apply to you — which is why nothing is saved until you review and
-          approve it. Do not rely on Life Admin as legal, medical, immigration or financial advice.
+          approve it. Do not rely on Sonae as legal, medical, immigration or financial advice.
         </p>
       </ProseSection>
 
       <ProseSection heading="Deadlines">
         <p>
-          Life Admin helps you keep track of deadlines. It does not guarantee that you will meet
+          Sonae helps you keep track of deadlines. It does not guarantee that you will meet
           them, and missing one remains your responsibility.
         </p>
       </ProseSection>

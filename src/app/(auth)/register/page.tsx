@@ -1,4 +1,4 @@
-import { AuthForm } from "@/components/life-admin/auth-form";
+import { AuthForm } from "@/components/sonae/auth-form";
 import { Wordmark } from "@/components/layout/wordmark";
 
 export default function RegisterPage() {
@@ -7,7 +7,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
         <Wordmark href="/" />
         <h1 className="type-display-lg mt-8">Create account</h1>
-        <p className="type-body mt-1.5 text-body">Set up your private Life Admin workspace.</p>
+        <p className="type-body mt-1.5 text-body">Set up your private Sonae workspace.</p>
         <div className="mt-7">
           <AuthForm mode="register" />
         </div>

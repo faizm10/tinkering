@@ -218,7 +218,7 @@ export function updateDemoProfile(profile: DashboardData["profile"]) {
     action: "updated",
     entityType: "profile",
     entityId: "profile",
-    description: "Updated Life Admin preferences.",
+    description: "Updated Sonae preferences.",
     createdAt: new Date().toISOString(),
   });
   return store.profile;

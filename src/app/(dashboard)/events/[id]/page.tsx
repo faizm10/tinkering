@@ -2,14 +2,14 @@ import { notFound } from "next/navigation";
 import { parseISO } from "date-fns";
 
 import { LifeEventProgress } from "@/components/events/life-event-progress";
-import { ActivityItem } from "@/components/life-admin/activity-item";
-import { PageHeader } from "@/components/life-admin/page-header";
-import { EventStatus, Tag } from "@/components/life-admin/status-indicator";
-import { EmptyState } from "@/components/life-admin/states";
+import { ActivityItem } from "@/components/sonae/activity-item";
+import { PageHeader } from "@/components/sonae/page-header";
+import { EventStatus, Tag } from "@/components/sonae/status-indicator";
+import { EmptyState } from "@/components/sonae/states";
 import { TaskGroup } from "@/components/tasks/task-group";
 import { WaitingItem } from "@/components/waiting/waiting-item";
 import { formatDateRange, formatShortDate, todayISO } from "@/lib/dates";
-import { getLifeEvent } from "@/server/services/life-admin";
+import { getLifeEvent } from "@/server/services/sonae";
 import type { LifeEventDetail } from "@/server/services/types";
 
 export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {

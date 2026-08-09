@@ -1,8 +1,8 @@
-import { PageHeader } from "@/components/life-admin/page-header";
-import { Section } from "@/components/life-admin/section";
-import { EmptyState } from "@/components/life-admin/states";
+import { PageHeader } from "@/components/sonae/page-header";
+import { Section } from "@/components/sonae/section";
+import { EmptyState } from "@/components/sonae/states";
 import { WaitingItem } from "@/components/waiting/waiting-item";
-import { getAllWaitingItems } from "@/server/services/life-admin";
+import { getAllWaitingItems } from "@/server/services/sonae";
 
 export default async function WaitingPage() {
   const items = await getAllWaitingItems();
@@ -26,7 +26,7 @@ export default async function WaitingPage() {
         ) : (
           <EmptyState
             message="Nothing is waiting on someone else."
-            hint="When Life Admin drafts a plan that depends on a reply, it will land here."
+            hint="When Sonae drafts a plan that depends on a reply, it will land here."
           />
         )}
       </Section>

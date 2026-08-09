@@ -1,4 +1,4 @@
-import { LoadingState, SkeletonBlock, SkeletonLine } from "@/components/life-admin/states";
+import { LoadingState, SkeletonBlock, SkeletonLine } from "@/components/sonae/states";
 
 /** Shaped like the dashboard: brief, composer, then two task sections. */
 export default function LoadingDashboard() {

@@ -12,9 +12,9 @@ import { UseCaseSwitcher } from "@/components/marketing/use-case-switcher";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Life Admin — the AI operating system for everything outside of work",
+  title: "Sonae — Prepared for what’s next",
   description:
-    "Describe what’s happening. Life Admin turns it into tasks, deadlines, reminders and follow-ups, then keeps everything organized until it’s done.",
+    "Sonae helps you turn life situations into approved plans, organized tasks, deadlines, reminders and follow-ups.",
 };
 
 /** Capabilities the product genuinely has — not logos, metrics or customers. */
@@ -35,11 +35,12 @@ export default function Home() {
           <Reveal className="lg:pt-6">
             <p className="type-label">AI for personal operations</p>
             <h1 className="type-display-hero mt-4 text-balance">
-              Your life has loose ends. Life Admin keeps track of them.
+              Sonae
             </h1>
             <p className="type-body mt-6 max-w-lg text-lg leading-relaxed text-body">
-              Describe what’s happening. Life Admin turns it into tasks, deadlines, reminders and
-              follow-ups — then keeps everything organized until it’s done.
+              Sonae means being prepared and organized. Prepared for what’s next. Describe what’s
+              happening and Sonae turns it into tasks, deadlines, reminders and follow-ups, then
+              keeps everything organized until it’s done.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -63,7 +64,7 @@ export default function Home() {
       </section>
 
       {/* Product proof band ----------------------------------------------- */}
-      <section aria-label="What Life Admin does" className="border-y border-hairline">
+      <section aria-label="What Sonae does" className="border-y border-hairline">
         <ul className="mx-auto grid max-w-[1200px] divide-y divide-hairline px-5 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-5 lg:px-8">
           {proofPoints.map((point) => (
             <li
@@ -82,11 +83,11 @@ export default function Home() {
         <div className="mx-auto max-w-[1200px] px-5 py-16 lg:px-8 lg:py-20">
           <Reveal className="max-w-2xl">
             <h2 className="type-display-lg text-balance">
-              Life admin rarely arrives as a neat checklist.
+              Personal admin rarely arrives as a neat checklist.
             </h2>
             <p className="type-body mt-4 text-body">
               It arrives through receipts, emails, appointments, purchases, travel plans and
-              conversations. Life Admin turns those loose details into a system you can actually
+              conversations. Sonae turns those loose details into a system you can actually
               follow.
             </p>
           </Reveal>
@@ -191,7 +192,7 @@ export default function Home() {
               Stop carrying every loose end in your head.
             </h2>
             <p className="type-body mt-4 text-body">
-              Tell Life Admin what’s happening and turn it into a plan you can actually complete.
+              Tell Sonae what’s happening and turn it into a plan you can actually complete.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Button asChild size="lg">

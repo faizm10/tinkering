@@ -126,7 +126,7 @@ export function Capabilities() {
           <div>
             <h3 className="type-card-title">Keep actions under your control</h3>
             <p className="type-body mt-1.5 text-body">
-              A plan is a suggestion until you approve it. Life Admin does not send, buy, cancel or
+              A plan is a suggestion until you approve it. Sonae does not send, buy, cancel or
               delete anything on your behalf.
             </p>
             <Link

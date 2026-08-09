@@ -1,4 +1,4 @@
-import { LoadingState, SkeletonBlock, SkeletonLine } from "@/components/life-admin/states";
+import { LoadingState, SkeletonBlock, SkeletonLine } from "@/components/sonae/states";
 
 /** Three grouped bands of checkbox rows, matching the tasks screen. */
 export default function LoadingTasks() {

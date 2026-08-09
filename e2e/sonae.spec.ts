@@ -4,7 +4,7 @@ test("user drafts, reviews and approves a moving plan", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { name: /good (morning|afternoon|evening)/i })).toBeVisible();
 
-  await page.getByPlaceholder(/tell life admin what/i).fill("I am moving to a new house on September 1.");
+  await page.getByPlaceholder(/tell sonae what/i).fill("I am moving to a new house on September 1.");
   await page.getByRole("button", { name: /draft a plan/i }).click();
 
   // The composer reports the run inline, then hands off to the approval screen.
@@ -13,7 +13,7 @@ test("user drafts, reviews and approves a moving plan", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: /life event/i })).toBeVisible();
   await page.getByLabel("Title", { exact: true }).fill("Move to New House");
-  await page.getByRole("button", { name: /add to life admin/i }).click();
+  await page.getByRole("button", { name: /add to sonae/i }).click();
 
   await expect(page.getByRole("heading", { name: /move to new house/i })).toBeVisible();
 

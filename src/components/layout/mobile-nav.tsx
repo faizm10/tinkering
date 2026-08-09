@@ -40,7 +40,7 @@ export function MobileNavigation() {
               className="my-1.5 grid size-11 place-items-center rounded-[var(--radius-control)] bg-primary text-on-primary transition-colors duration-[var(--dur-hover)] active:bg-primary-active"
             >
               <Plus className="size-5" />
-              <span className="sr-only">Tell Life Admin what’s happening</span>
+              <span className="sr-only">Tell Sonae what’s happening</span>
             </button>
           </li>
 
@@ -146,7 +146,7 @@ function ComposerSheet({ open, onClose }: { open: boolean; onClose: () => void }
             ref={panelRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Tell Life Admin what’s happening"
+            aria-label="Tell Sonae what’s happening"
             tabIndex={-1}
             variants={reduceMotion ? undefined : sheetVariants}
             initial="hidden"

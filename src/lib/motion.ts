@@ -1,7 +1,7 @@
 import type { Transition, Variants } from "motion/react";
 
 /**
- * Motion tokens for Life Admin.
+ * Motion tokens for Sonae.
  *
  * The system is deliberately quiet: transform and opacity only, short
  * durations, no bounce. Anything longer than ~300ms reads as sluggish in a

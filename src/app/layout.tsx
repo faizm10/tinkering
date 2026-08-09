@@ -15,8 +15,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Life Admin",
-  description: "A personal operating system for turning life situations into approved plans.",
+  title: {
+    default: "Sonae",
+    template: "%s",
+  },
+  description: "Prepared for what’s next.",
+  applicationName: "Sonae",
 };
 
 export const viewport: Viewport = {

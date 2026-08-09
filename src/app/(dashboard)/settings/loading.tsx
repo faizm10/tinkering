@@ -1,4 +1,4 @@
-import { LoadingState, SkeletonLine } from "@/components/life-admin/states";
+import { LoadingState, SkeletonLine } from "@/components/sonae/states";
 
 export default function LoadingSettings() {
   return (

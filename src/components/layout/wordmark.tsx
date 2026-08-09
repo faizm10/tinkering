@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { brandIcon as BrandIcon } from "@/components/layout/nav-items";
 import { cn } from "@/lib/utils";
 
 export function Wordmark({ href = "/dashboard", className }: { href?: string; className?: string }) {
@@ -14,12 +13,12 @@ export function Wordmark({ href = "/dashboard", className }: { href?: string; cl
       )}
     >
       <span
-        className="grid size-7 place-items-center rounded-[6px] bg-ink text-canvas"
+        className="grid size-7 place-items-center rounded-[6px] bg-ink text-[0.875rem] font-semibold leading-none text-canvas"
         aria-hidden
       >
-        <BrandIcon className="size-3.5" />
+        S
       </span>
-      <span className="text-[0.9375rem] tracking-[-0.01em]">Life Admin</span>
+      <span className="text-[0.9375rem] tracking-[0.02em]">Sonae</span>
     </Link>
   );
 }

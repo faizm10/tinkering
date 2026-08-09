@@ -1,4 +1,4 @@
-import { LoadingState, SkeletonLine } from "@/components/life-admin/states";
+import { LoadingState, SkeletonLine } from "@/components/sonae/states";
 
 /** Wide mono duration on the left, the obligation on the right. */
 export default function LoadingWaiting() {

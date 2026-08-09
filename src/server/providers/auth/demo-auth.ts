@@ -16,7 +16,7 @@ export class DemoAuthProvider implements AuthProvider {
     return {
       id: DEMO_USER_ID,
       name: "Demo User",
-      email: "demo@lifeadmin.local",
+      email: "demo@sonae.local",
     };
   }
 

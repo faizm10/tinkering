@@ -1,6 +1,6 @@
 "use client";
 
-import { ErrorState } from "@/components/life-admin/states";
+import { ErrorState } from "@/components/sonae/states";
 
 export default function DashboardError({ reset }: { error: Error; reset: () => void }) {
   return (

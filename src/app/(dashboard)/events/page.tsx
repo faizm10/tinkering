@@ -1,7 +1,7 @@
 import { LifeEventCard } from "@/components/events/life-event-card";
-import { PageHeader } from "@/components/life-admin/page-header";
-import { EmptyState } from "@/components/life-admin/states";
-import { getAllLifeEvents } from "@/server/services/life-admin";
+import { PageHeader } from "@/components/sonae/page-header";
+import { EmptyState } from "@/components/sonae/states";
+import { getAllLifeEvents } from "@/server/services/sonae";
 
 export default async function EventsPage() {
   const events = await getAllLifeEvents();
@@ -12,12 +12,12 @@ export default async function EventsPage() {
     <div className="space-y-9">
       <PageHeader
         title="Life Events"
-        description="Everything Life Admin is currently keeping track of for you."
+        description="Everything Sonae is currently keeping track of for you."
       />
 
       {events.length === 0 ? (
         <EmptyState
-          message="Tell Life Admin what’s happening and it will organize the details."
+          message="Tell Sonae what’s happening and it will organize the details."
           action={{ label: "Open the composer", href: "/dashboard" }}
         />
       ) : (

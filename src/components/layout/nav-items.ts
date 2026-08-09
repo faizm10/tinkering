@@ -2,7 +2,6 @@ import {
   CalendarRange,
   Clock,
   History,
-  Inbox,
   LayoutGrid,
   ListTodo,
   Settings,
@@ -32,8 +31,6 @@ export const primaryNav: NavItem[] = [
 export const mobileNav: NavItem[] = ["/dashboard", "/events", "/waiting", "/settings"].map(
   (href) => primaryNav.find((item) => item.href === href)!,
 );
-
-export const brandIcon = Inbox;
 
 /** A nav item is active on its own route and on anything nested beneath it. */
 export function isActive(pathname: string, href: string) {

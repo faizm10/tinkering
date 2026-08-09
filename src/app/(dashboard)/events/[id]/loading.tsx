@@ -1,4 +1,4 @@
-import { LoadingState, SkeletonBlock, SkeletonLine } from "@/components/life-admin/states";
+import { LoadingState, SkeletonBlock, SkeletonLine } from "@/components/sonae/states";
 
 /** Header, overview card, then the event's stacked sections. */
 export default function LoadingEvent() {

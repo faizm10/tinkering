@@ -1,4 +1,4 @@
-import { AuthForm } from "@/components/life-admin/auth-form";
+import { AuthForm } from "@/components/sonae/auth-form";
 import { Wordmark } from "@/components/layout/wordmark";
 
 export default function LoginPage() {

@@ -8,7 +8,7 @@ export function buildDailyBrief(data: DashboardData) {
   const soon = data.upcoming.slice(0, 3);
 
   if (overdue.length === 0 && dueToday.length === 0 && followUps.length === 0 && soon.length === 0) {
-    return "You have no urgent life admin today. Keep an eye on upcoming events as dates get closer.";
+    return "You have no urgent personal admin today. Keep an eye on upcoming events as dates get closer.";
   }
 
   const parts: string[] = [];

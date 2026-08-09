@@ -43,7 +43,7 @@ export function SiteFooter() {
           <div className="space-y-3">
             <Wordmark href="/" />
             <p className="type-meta max-w-56">
-              The AI operating system for everything outside of work.
+              Prepared for what’s next.
             </p>
           </div>
 
@@ -68,7 +68,7 @@ export function SiteFooter() {
         </div>
 
         <p className="type-meta mt-12 border-t border-hairline-soft pt-6">
-          © {new Date().getFullYear()} Life Admin
+          © {new Date().getFullYear()} Sonae
         </p>
       </div>
     </footer>
