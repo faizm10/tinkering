@@ -1,77 +1,140 @@
-import { format } from "date-fns";
 import Link from "next/link";
-import { EmptyState, Section } from "@/components/life-admin/section";
-import { SituationComposer } from "@/components/dashboard/situation-composer";
-import { TaskRow } from "@/components/dashboard/task-row";
+import { ArrowRight } from "lucide-react";
+
+import { AgentComposer } from "@/components/agent/agent-composer";
+import { DailyBrief } from "@/components/dashboard/daily-brief";
+import { LifeEventCard } from "@/components/events/life-event-card";
+import { Section } from "@/components/life-admin/section";
+import { EmptyState } from "@/components/life-admin/states";
+import { TaskGroup } from "@/components/tasks/task-group";
+import { WaitingItem } from "@/components/waiting/waiting-item";
+import { Button } from "@/components/ui/button";
 import { buildDailyBrief } from "@/server/daily-brief/brief";
 import { getDashboardData } from "@/server/services/life-admin";
 
 export default async function DashboardPage() {
   const data = await getDashboardData();
   const brief = buildDailyBrief(data);
+  const upcoming = data.upcoming.slice(0, 5);
+  const recentlyCompleted = data.recentlyCompleted.slice(0, 4);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <header className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">{format(new Date(), "EEEE, MMMM d")}</p>
-          <h1 className="text-3xl font-semibold">Good morning, {data.profile.name}</h1>
-        </div>
-        <p className="max-w-xl text-sm text-muted-foreground">{brief}</p>
-      </header>
-      <SituationComposer />
-      <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        <Section title="Today">
-          {data.today.length ? data.today.map((task) => <TaskRow key={task.id} task={task} />) : <EmptyState>No tasks need attention today.</EmptyState>}
-        </Section>
-        <Section title="Waiting On">
-          {data.waiting.length ? (
-            <div className="space-y-3">
-              {data.waiting.map((item) => (
-                <div key={item.id} className="border-b border-border pb-3 last:border-b-0">
-                  <p className="font-medium">{item.title}</p>
-                  <p className="text-sm text-muted-foreground">{item.waitingOn}</p>
-                  {item.followUpDate ? <p className="mt-1 text-xs text-muted-foreground">Follow up {item.followUpDate}</p> : null}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState>Nothing is blocked on another person or company.</EmptyState>
-          )}
-        </Section>
-      </div>
-      <div className="grid gap-5 lg:grid-cols-3">
-        <Section title="Upcoming">
-          {data.upcoming.length ? data.upcoming.slice(0, 4).map((task) => <TaskRow key={task.id} task={task} />) : <EmptyState>No upcoming tasks.</EmptyState>}
-        </Section>
-        <Section title="Active Life Events">
-          <div className="space-y-3">
-            {data.lifeEvents.map((event) => (
-              <Link key={event.id} href={`/events/${event.id}`} className="block border-b border-border pb-3 last:border-b-0">
-                <p className="font-medium">{event.title}</p>
-                <p className="text-sm text-muted-foreground">{event.description}</p>
+    <div className="space-y-10">
+      <DailyBrief name={data.profile.name} brief={brief} />
+
+      <AgentComposer />
+
+      <Section title="Today" count={data.today.length}>
+        {data.today.length ? (
+          <TaskGroup tasks={data.today} events={data.lifeEvents} />
+        ) : (
+          <EmptyState
+            message="You’re clear for today."
+            hint="Anything with a deadline today will show up here."
+          />
+        )}
+      </Section>
+
+      <Section
+        title="Upcoming"
+        count={data.upcoming.length}
+        action={
+          data.upcoming.length > upcoming.length ? (
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/tasks">
+                All tasks <ArrowRight className="size-3.5" />
               </Link>
+            </Button>
+          ) : null
+        }
+      >
+        {upcoming.length ? (
+          <TaskGroup tasks={upcoming} events={data.lifeEvents} />
+        ) : (
+          <EmptyState message="Nothing scheduled beyond today." />
+        )}
+      </Section>
+
+      <Section
+        title="Waiting On"
+        count={data.waiting.length}
+        action={
+          data.waiting.length ? (
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/waiting">
+                Open <ArrowRight className="size-3.5" />
+              </Link>
+            </Button>
+          ) : null
+        }
+      >
+        {data.waiting.length ? (
+          <ul className="divide-y divide-hairline-soft">
+            {data.waiting.slice(0, 3).map((item) => (
+              <WaitingItem key={item.id} item={item} />
+            ))}
+          </ul>
+        ) : (
+          <EmptyState message="Nothing is waiting on someone else." />
+        )}
+      </Section>
+
+      <Section
+        title="Active life events"
+        count={data.lifeEvents.length}
+        action={
+          data.lifeEvents.length ? (
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/events">
+                All events <ArrowRight className="size-3.5" />
+              </Link>
+            </Button>
+          ) : null
+        }
+      >
+        {data.lifeEvents.length ? (
+          <div className="grid gap-4 pt-4 sm:grid-cols-2 xl:grid-cols-3">
+            {data.lifeEvents.map((event) => (
+              <LifeEventCard key={event.id} event={event} />
             ))}
           </div>
-        </Section>
-        <Section title="Agent Suggestions">
-          {data.proposals.length ? (
-            <div className="space-y-3">
-              {data.proposals.map((proposal) => (
-                <Link key={proposal.id} href={`/approvals?proposal=${proposal.id}`} className="block border-b border-border pb-3 last:border-b-0">
-                  <p className="font-medium">{proposal.proposedPlanJson.lifeEvent.title}</p>
-                  <p className="text-sm text-muted-foreground">{proposal.proposedPlanJson.summary}</p>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <EmptyState>No pending proposals.</EmptyState>
-          )}
-        </Section>
-      </div>
-      <Section title="Recently Completed">
-        {data.recentlyCompleted.length ? data.recentlyCompleted.map((task) => <TaskRow key={task.id} task={task} />) : <EmptyState>Completed tasks will appear here.</EmptyState>}
+        ) : (
+          <EmptyState message="Tell Life Admin what’s happening and it will organize the details." />
+        )}
       </Section>
+
+      <Section title="Pending suggestions" count={data.proposals.length}>
+        {data.proposals.length ? (
+          <ul className="divide-y divide-hairline-soft">
+            {data.proposals.map((proposal) => (
+              <li key={proposal.id}>
+                <Link
+                  href={`/approvals?proposal=${proposal.id}`}
+                  className="group/proposal flex items-start justify-between gap-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="type-card-title">{proposal.proposedPlanJson.lifeEvent.title}</p>
+                    <p className="type-meta mt-0.5 line-clamp-2">
+                      {proposal.proposedPlanJson.summary}
+                    </p>
+                  </div>
+                  <span className="type-meta shrink-0 transition-colors duration-[var(--dur-hover)] group-hover/proposal:text-ink">
+                    Review
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyState message="No plans waiting for review." />
+        )}
+      </Section>
+
+      {recentlyCompleted.length ? (
+        <Section title="Recently completed" count={data.recentlyCompleted.length}>
+          <TaskGroup tasks={recentlyCompleted} events={data.lifeEvents} />
+        </Section>
+      ) : null}
     </div>
   );
 }
