@@ -108,4 +108,69 @@ describe("provider-backed vertical slice", () => {
     const waiting = await repository.listWaitingItems(userId);
     expect(waiting[0]?.lifeEventId).toBeNull();
   });
+
+  it("updates and deletes manual event attachments", async () => {
+    const userId = `attachments-user-${Date.now()}`;
+    const repository = new MemoryDataRepository();
+    const eventId = await repository.createLifeEvent(userId, {
+      title: "Renew Passport",
+      description: "",
+      category: "document_renewal",
+      startDate: null,
+      endDate: null,
+    });
+
+    const task = await repository.createTask(userId, {
+      lifeEventId: eventId,
+      title: "Find old passport",
+      description: "",
+      priority: "medium",
+      dueDate: "2026-08-20",
+    });
+    const updatedTask = await repository.updateTask(userId, task.id, {
+      title: "Find current passport",
+      dueDate: null,
+      priority: "high",
+    });
+    expect(updatedTask.title).toBe("Find current passport");
+    expect(updatedTask.dueDate).toBeNull();
+    expect(updatedTask.priority).toBe("high");
+
+    const waiting = await repository.createWaitingItem(userId, {
+      lifeEventId: eventId,
+      title: "Photo appointment confirmation",
+      description: "",
+      waitingOn: "Photo studio",
+      expectedBy: "2026-08-21",
+      followUpDate: "2026-08-19",
+    });
+    const updatedWaiting = await repository.updateWaitingItem(userId, waiting.id, {
+      waitingOn: "Passport office",
+      expectedBy: null,
+    });
+    expect(updatedWaiting.waitingOn).toBe("Passport office");
+    expect(updatedWaiting.expectedBy).toBeNull();
+
+    const reminder = await repository.createReminder(userId, {
+      lifeEventId: eventId,
+      taskId: null,
+      title: "Bring documents",
+      remindAt: "2026-08-22T13:00:00-04:00",
+    });
+    const updatedReminder = await repository.updateReminder(userId, reminder.id, {
+      title: "Bring passport documents",
+      remindAt: "2026-08-23T13:00:00-04:00",
+    });
+    expect(updatedReminder.title).toBe("Bring passport documents");
+    expect(updatedReminder.remindAt).toBe("2026-08-23T13:00:00-04:00");
+
+    await repository.deleteReminder(userId, reminder.id);
+    await repository.deleteWaitingItem(userId, waiting.id);
+    await repository.deleteTask(userId, task.id);
+
+    const detail = await repository.getLifeEvent(userId, eventId);
+    expect(detail?.tasks).toHaveLength(0);
+    expect(detail?.waiting).toHaveLength(0);
+    expect(detail?.reminders).toHaveLength(0);
+  });
 });

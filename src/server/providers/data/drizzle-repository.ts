@@ -175,6 +175,26 @@ async function requireTask(executor: Executor, userId: string, taskId: string) {
   return task;
 }
 
+async function requireWaitingItem(executor: Executor, userId: string, waitingId: string) {
+  const [item] = await executor
+    .select()
+    .from(waitingItems)
+    .where(and(eq(waitingItems.id, waitingId), eq(waitingItems.userId, userId)))
+    .limit(1);
+  if (!item) throw new Error("Waiting item not found.");
+  return item;
+}
+
+async function requireReminder(executor: Executor, userId: string, reminderId: string) {
+  const [reminder] = await executor
+    .select()
+    .from(reminders)
+    .where(and(eq(reminders.id, reminderId), eq(reminders.userId, userId)))
+    .limit(1);
+  if (!reminder) throw new Error("Reminder not found.");
+  return reminder;
+}
+
 async function log(
   executor: Executor,
   userId: string,
@@ -383,6 +403,12 @@ export class DrizzleDataRepository implements DataRepository {
     return toTask(task);
   }
 
+  async deleteTask(userId: string, taskId: string) {
+    const task = await requireTask(db, userId, taskId);
+    await db.delete(tasks).where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)));
+    await log(db, userId, "user", "archived", "task", task.id, `Deleted "${task.title}".`);
+  }
+
   async setTaskCompleted(userId: string, taskId: string, completed: boolean) {
     const current = await requireTask(db, userId, taskId);
     const [task] = await db
@@ -413,13 +439,26 @@ export class DrizzleDataRepository implements DataRepository {
     return toWaiting(item);
   }
 
-  async resolveWaitingItem(userId: string, waitingId: string) {
-    const [current] = await db
-      .select()
-      .from(waitingItems)
+  async updateWaitingItem(userId: string, waitingId: string, input: Partial<CreateWaitingItemInput>) {
+    await requireWaitingItem(db, userId, waitingId);
+    if (input.lifeEventId) await requireEvent(db, userId, input.lifeEventId);
+    const [item] = await db
+      .update(waitingItems)
+      .set({ ...input, updatedAt: new Date() })
       .where(and(eq(waitingItems.id, waitingId), eq(waitingItems.userId, userId)))
-      .limit(1);
-    if (!current) throw new Error("Waiting item not found.");
+      .returning();
+    await log(db, userId, "user", "updated", "waiting_item", item.id, `Updated "${item.title}".`);
+    return toWaiting(item);
+  }
+
+  async deleteWaitingItem(userId: string, waitingId: string) {
+    const item = await requireWaitingItem(db, userId, waitingId);
+    await db.delete(waitingItems).where(and(eq(waitingItems.id, waitingId), eq(waitingItems.userId, userId)));
+    await log(db, userId, "user", "archived", "waiting_item", item.id, `Deleted "${item.title}".`);
+  }
+
+  async resolveWaitingItem(userId: string, waitingId: string) {
+    await requireWaitingItem(db, userId, waitingId);
 
     const [item] = await db
       .update(waitingItems)
@@ -439,6 +478,31 @@ export class DrizzleDataRepository implements DataRepository {
       .returning();
     await log(db, userId, "user", "created", "reminder", reminder.id, `Created reminder "${reminder.title}".`);
     return toReminder(reminder);
+  }
+
+  async updateReminder(userId: string, reminderId: string, input: Partial<CreateReminderInput>) {
+    await requireReminder(db, userId, reminderId);
+    if (input.lifeEventId) await requireEvent(db, userId, input.lifeEventId);
+    if (input.taskId) await requireTask(db, userId, input.taskId);
+    const { remindAt, ...rest } = input;
+    const values = {
+      ...rest,
+      ...(remindAt ? { remindAt: new Date(remindAt) } : {}),
+      updatedAt: new Date(),
+    };
+    const [reminder] = await db
+      .update(reminders)
+      .set(values)
+      .where(and(eq(reminders.id, reminderId), eq(reminders.userId, userId)))
+      .returning();
+    await log(db, userId, "user", "updated", "reminder", reminder.id, `Updated "${reminder.title}".`);
+    return toReminder(reminder);
+  }
+
+  async deleteReminder(userId: string, reminderId: string) {
+    const reminder = await requireReminder(db, userId, reminderId);
+    await db.delete(reminders).where(and(eq(reminders.id, reminderId), eq(reminders.userId, userId)));
+    await log(db, userId, "user", "archived", "reminder", reminder.id, `Deleted "${reminder.title}".`);
   }
 
   async listProposals(userId: string) {

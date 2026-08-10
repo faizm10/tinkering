@@ -329,9 +329,17 @@ export class MemoryDataRepository implements DataRepository {
 
   async updateTask(userId: string, taskId: string, input: Partial<CreateTaskInput>) {
     const task = assertOwns(store.tasks.find((entry) => entry.id === taskId), userId, "Task");
+    if (input.lifeEventId) assertOwns(store.events.find((event) => event.id === input.lifeEventId), userId, "Life event");
     Object.assign(task, input);
     log(userId, "user", "updated", "task", task.id, `Updated “${task.title}”.`);
     return task;
+  }
+
+  async deleteTask(userId: string, taskId: string) {
+    const task = assertOwns(store.tasks.find((entry) => entry.id === taskId), userId, "Task");
+    store.tasks = store.tasks.filter((entry) => !(entry.id === taskId && entry.userId === userId));
+    store.reminders = store.reminders.filter((reminder) => !(reminder.taskId === taskId && reminder.userId === userId));
+    log(userId, "user", "archived", "task", task.id, `Deleted “${task.title}”.`);
   }
 
   async setTaskCompleted(userId: string, taskId: string, completed: boolean) {
@@ -361,6 +369,20 @@ export class MemoryDataRepository implements DataRepository {
     return item;
   }
 
+  async updateWaitingItem(userId: string, waitingId: string, input: Partial<CreateWaitingItemInput>) {
+    const item = assertOwns(store.waiting.find((entry) => entry.id === waitingId), userId, "Waiting item");
+    if (input.lifeEventId) assertOwns(store.events.find((event) => event.id === input.lifeEventId), userId, "Life event");
+    Object.assign(item, input);
+    log(userId, "user", "updated", "waiting_item", item.id, `Updated “${item.title}”.`);
+    return item;
+  }
+
+  async deleteWaitingItem(userId: string, waitingId: string) {
+    const item = assertOwns(store.waiting.find((entry) => entry.id === waitingId), userId, "Waiting item");
+    store.waiting = store.waiting.filter((entry) => !(entry.id === waitingId && entry.userId === userId));
+    log(userId, "user", "archived", "waiting_item", item.id, `Deleted “${item.title}”.`);
+  }
+
   async resolveWaitingItem(userId: string, waitingId: string) {
     const item = assertOwns(store.waiting.find((entry) => entry.id === waitingId), userId, "Waiting item");
     if (item.status !== "resolved") {
@@ -378,6 +400,21 @@ export class MemoryDataRepository implements DataRepository {
     store.reminders.unshift(reminder);
     log(userId, "user", "created", "reminder", reminder.id, `Created reminder “${reminder.title}”.`);
     return reminder;
+  }
+
+  async updateReminder(userId: string, reminderId: string, input: Partial<CreateReminderInput>) {
+    const reminder = assertOwns(store.reminders.find((entry) => entry.id === reminderId), userId, "Reminder");
+    if (input.lifeEventId) assertOwns(store.events.find((event) => event.id === input.lifeEventId), userId, "Life event");
+    if (input.taskId) assertOwns(store.tasks.find((task) => task.id === input.taskId), userId, "Task");
+    Object.assign(reminder, input);
+    log(userId, "user", "updated", "reminder", reminder.id, `Updated “${reminder.title}”.`);
+    return reminder;
+  }
+
+  async deleteReminder(userId: string, reminderId: string) {
+    const reminder = assertOwns(store.reminders.find((entry) => entry.id === reminderId), userId, "Reminder");
+    store.reminders = store.reminders.filter((entry) => !(entry.id === reminderId && entry.userId === userId));
+    log(userId, "user", "archived", "reminder", reminder.id, `Deleted “${reminder.title}”.`);
   }
 
   async listProposals(userId: string) {
