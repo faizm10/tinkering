@@ -67,4 +67,45 @@ describe("provider-backed vertical slice", () => {
     await expect(repository.getLifeEvent("owner-b", eventId)).resolves.toBeNull();
     await expect(repository.completeLifeEvent("owner-b", eventId)).rejects.toThrow("not found");
   });
+
+  it("deletes a life event without deleting the user's loose tasks", async () => {
+    const userId = `delete-user-${Date.now()}`;
+    const repository = new MemoryDataRepository();
+    const eventId = await repository.createLifeEvent(userId, {
+      title: "Move Apartment",
+      description: "",
+      category: "moving",
+      startDate: "2026-08-20",
+      endDate: "2026-08-20",
+    });
+    const task = await repository.createTask(userId, {
+      lifeEventId: eventId,
+      title: "Update address",
+      description: "",
+      priority: "high",
+      dueDate: "2026-08-19",
+    });
+    await repository.createWaitingItem(userId, {
+      lifeEventId: eventId,
+      title: "Confirm elevator booking",
+      description: "",
+      waitingOn: "Building manager",
+      expectedBy: "2026-08-15",
+      followUpDate: "2026-08-14",
+    });
+    await repository.createReminder(userId, {
+      lifeEventId: eventId,
+      taskId: null,
+      title: "Pack essentials",
+      remindAt: "2026-08-18T09:00:00-04:00",
+    });
+
+    await repository.deleteLifeEvent(userId, eventId);
+
+    await expect(repository.getLifeEvent(userId, eventId)).resolves.toBeNull();
+    const tasks = await repository.listTasks(userId);
+    expect(tasks.find((entry) => entry.id === task.id)?.lifeEventId).toBeNull();
+    const waiting = await repository.listWaitingItems(userId);
+    expect(waiting[0]?.lifeEventId).toBeNull();
+  });
 });

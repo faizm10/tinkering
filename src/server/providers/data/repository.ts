@@ -52,6 +52,7 @@ export interface DataRepository {
   createLifeEvent(userId: string, input: CreateLifeEventInput): Promise<string>;
   updateLifeEvent(userId: string, eventId: string, input: Partial<CreateLifeEventInput>): Promise<LifeEventSummary>;
   completeLifeEvent(userId: string, eventId: string): Promise<void>;
+  deleteLifeEvent(userId: string, eventId: string): Promise<void>;
   listTasks(userId: string): Promise<TaskRecord[]>;
   createTask(userId: string, input: CreateTaskInput): Promise<TaskRecord>;
   updateTask(userId: string, taskId: string, input: Partial<CreateTaskInput>): Promise<TaskRecord>;

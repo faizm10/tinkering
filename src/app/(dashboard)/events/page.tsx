@@ -1,5 +1,9 @@
+import Link from "next/link";
+import { Plus } from "lucide-react";
+
 import { LifeEventCard } from "@/components/events/life-event-card";
 import { PageHeader } from "@/components/sonae/page-header";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/sonae/states";
 import { getAllLifeEvents } from "@/server/services/sonae";
 
@@ -13,12 +17,20 @@ export default async function EventsPage() {
       <PageHeader
         title="Life Events"
         description="Everything Sonae is currently keeping track of for you."
+        actions={
+          <Button asChild size="sm">
+            <Link href="/events/new">
+              Add event
+              <Plus className="size-3.5" />
+            </Link>
+          </Button>
+        }
       />
 
       {events.length === 0 ? (
         <EmptyState
           message="Tell Sonae what’s happening and it will organize the details."
-          action={{ label: "Open the composer", href: "/dashboard" }}
+          action={{ label: "Add event", href: "/events/new" }}
         />
       ) : (
         <div className="space-y-10">
