@@ -349,6 +349,13 @@ export class DrizzleDataRepository implements DataRepository {
     await log(db, userId, "user", "completed", "life_event", eventId, `Completed "${event.title}".`);
   }
 
+  async deleteLifeEvent(userId: string, eventId: string) {
+    await db.transaction(async (tx) => {
+      await requireEvent(tx, userId, eventId);
+      await tx.delete(lifeEvents).where(and(eq(lifeEvents.id, eventId), eq(lifeEvents.userId, userId)));
+    });
+  }
+
   async listTasks(userId: string) {
     const rows = await db.select().from(tasks).where(eq(tasks.userId, userId)).orderBy(asc(tasks.dueDate));
     return rows.map(toTask);

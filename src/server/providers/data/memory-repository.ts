@@ -296,6 +296,18 @@ export class MemoryDataRepository implements DataRepository {
     log(userId, "user", "completed", "life_event", eventId, `Completed “${event.title}”.`);
   }
 
+  async deleteLifeEvent(userId: string, eventId: string) {
+    assertOwns(store.events.find((entry) => entry.id === eventId), userId, "Life event");
+    store.events = store.events.filter((event) => !(event.id === eventId && event.userId === userId));
+    store.reminders = store.reminders.filter((reminder) => !(reminder.lifeEventId === eventId && reminder.userId === userId));
+    store.tasks.forEach((task) => {
+      if (task.userId === userId && task.lifeEventId === eventId) task.lifeEventId = null;
+    });
+    store.waiting.forEach((item) => {
+      if (item.userId === userId && item.lifeEventId === eventId) item.lifeEventId = null;
+    });
+  }
+
   async listTasks(userId: string) {
     return store.tasks.filter((task) => task.userId === userId).sort(byDueDate);
   }

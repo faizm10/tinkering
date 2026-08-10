@@ -55,14 +55,19 @@ export async function updateLifeEvent(eventId: string, input: unknown) {
   const parsed = updateLifeEventSchema.parse(input);
   return getDataRepository().updateLifeEvent(user.id, eventId, {
     ...parsed,
-    startDate: parsed.startDate ?? undefined,
-    endDate: parsed.endDate ?? undefined,
+    startDate: "startDate" in parsed ? (parsed.startDate ?? null) : undefined,
+    endDate: "endDate" in parsed ? (parsed.endDate ?? null) : undefined,
   });
 }
 
 export async function completeLifeEvent(eventId: string) {
   const user = await requireUser();
   await getDataRepository().completeLifeEvent(user.id, eventId);
+}
+
+export async function deleteLifeEvent(eventId: string) {
+  const user = await requireUser();
+  await getDataRepository().deleteLifeEvent(user.id, eventId);
 }
 
 export async function createTask(input: unknown) {

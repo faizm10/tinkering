@@ -1,12 +1,16 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { parseISO } from "date-fns";
+import { Pencil } from "lucide-react";
 
+import { DeleteLifeEventButton } from "@/components/events/delete-life-event-button";
 import { LifeEventProgress } from "@/components/events/life-event-progress";
 import { ActivityItem } from "@/components/sonae/activity-item";
 import { PageHeader } from "@/components/sonae/page-header";
 import { EventStatus, Tag } from "@/components/sonae/status-indicator";
 import { EmptyState } from "@/components/sonae/states";
 import { TaskGroup } from "@/components/tasks/task-group";
+import { Button } from "@/components/ui/button";
 import { WaitingItem } from "@/components/waiting/waiting-item";
 import { formatDateRange, formatShortDate, todayISO } from "@/lib/dates";
 import { getLifeEvent } from "@/server/services/sonae";
@@ -27,6 +31,17 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         eyebrow={event.category}
         title={event.title}
         description={event.description || undefined}
+        actions={
+          <>
+            <Button asChild variant="secondary" size="sm">
+              <Link href={`/events/${event.id}/edit`}>
+                Edit
+                <Pencil className="size-3.5" />
+              </Link>
+            </Button>
+            <DeleteLifeEventButton eventId={event.id} eventTitle={event.title} />
+          </>
+        }
       />
 
       <section aria-label="Overview" className="surface-card p-4 sm:p-5">
