@@ -13,17 +13,21 @@ describeIf("agent service flow", () => {
   const userId = `agent-service-${Date.now()}-${randomUUID()}`;
 
   afterAll(async () => {
-    const [{ db }, { activityLogs, agentProposals, agentRuns }] = await Promise.all([
+    const [{ db }, { activityLogs, agentProposals, agentRuns, lifeEvents, reminders, tasks, waitingItems }] = await Promise.all([
       import("@/db"),
       import("@/db/schema"),
     ]);
 
     await db.delete(agentRuns).where(eq(agentRuns.userId, userId));
     await db.delete(activityLogs).where(eq(activityLogs.userId, userId));
+    await db.delete(reminders).where(eq(reminders.userId, userId));
+    await db.delete(waitingItems).where(eq(waitingItems.userId, userId));
+    await db.delete(tasks).where(eq(tasks.userId, userId));
+    await db.delete(lifeEvents).where(eq(lifeEvents.userId, userId));
     await db.delete(agentProposals).where(eq(agentProposals.userId, userId));
   });
 
-  it("creates and stores a moving proposal from the dashboard prompt", async () => {
+  it("creates, stores, and approves a moving proposal from the dashboard prompt", async () => {
     const [
       { agentProposalSchema },
       { AGENT_PROMPT_VERSION },
@@ -81,5 +85,8 @@ describeIf("agent service flow", () => {
     expect(proposal.category).toBe("moving");
     expect(proposal.tasks.length).toBeGreaterThan(1);
     expect(proposal.clarificationQuestions).toHaveLength(0);
+
+    const eventId = await repository.approveProposal(userId, record.id, proposal);
+    expect(eventId).toEqual(expect.any(String));
   }, 90_000);
 });
