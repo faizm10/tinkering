@@ -56,11 +56,16 @@ export interface DataRepository {
   listTasks(userId: string): Promise<TaskRecord[]>;
   createTask(userId: string, input: CreateTaskInput): Promise<TaskRecord>;
   updateTask(userId: string, taskId: string, input: Partial<CreateTaskInput>): Promise<TaskRecord>;
+  deleteTask(userId: string, taskId: string): Promise<void>;
   setTaskCompleted(userId: string, taskId: string, completed: boolean): Promise<TaskRecord>;
   listWaitingItems(userId: string): Promise<WaitingItemRecord[]>;
   createWaitingItem(userId: string, input: CreateWaitingItemInput): Promise<WaitingItemRecord>;
+  updateWaitingItem(userId: string, waitingId: string, input: Partial<CreateWaitingItemInput>): Promise<WaitingItemRecord>;
+  deleteWaitingItem(userId: string, waitingId: string): Promise<void>;
   resolveWaitingItem(userId: string, waitingId: string): Promise<WaitingItemRecord>;
   createReminder(userId: string, input: CreateReminderInput): Promise<ReminderRecord>;
+  updateReminder(userId: string, reminderId: string, input: Partial<CreateReminderInput>): Promise<ReminderRecord>;
+  deleteReminder(userId: string, reminderId: string): Promise<void>;
   listProposals(userId: string): Promise<ProposalRecord[]>;
   getProposal(userId: string, proposalId: string): Promise<ProposalRecord | null>;
   createProposal(

@@ -33,12 +33,16 @@ export const createWaitingItemSchema = z.object({
   followUpDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 });
 
+export const updateWaitingItemSchema = createWaitingItemSchema.partial();
+
 export const createReminderSchema = z.object({
   taskId: z.string().nullable().optional(),
   lifeEventId: z.string().nullable().optional(),
   title: z.string().trim().min(2).max(120),
   remindAt: z.string().datetime({ offset: true }),
 });
+
+export const updateReminderSchema = createReminderSchema.partial();
 
 export async function createLifeEvent(input: unknown) {
   const user = await requireUser();
@@ -85,9 +89,14 @@ export async function updateTask(taskId: string, input: unknown) {
   const parsed = updateTaskSchema.parse(input);
   return getDataRepository().updateTask(user.id, taskId, {
     ...parsed,
-    lifeEventId: parsed.lifeEventId ?? undefined,
-    dueDate: parsed.dueDate ?? undefined,
+    lifeEventId: "lifeEventId" in parsed ? (parsed.lifeEventId ?? null) : undefined,
+    dueDate: "dueDate" in parsed ? (parsed.dueDate ?? null) : undefined,
   });
+}
+
+export async function deleteTask(taskId: string) {
+  const user = await requireUser();
+  await getDataRepository().deleteTask(user.id, taskId);
 }
 
 export async function createWaitingItem(input: unknown) {
@@ -101,6 +110,22 @@ export async function createWaitingItem(input: unknown) {
   });
 }
 
+export async function updateWaitingItem(waitingId: string, input: unknown) {
+  const user = await requireUser();
+  const parsed = updateWaitingItemSchema.parse(input);
+  return getDataRepository().updateWaitingItem(user.id, waitingId, {
+    ...parsed,
+    lifeEventId: "lifeEventId" in parsed ? (parsed.lifeEventId ?? null) : undefined,
+    expectedBy: "expectedBy" in parsed ? (parsed.expectedBy ?? null) : undefined,
+    followUpDate: "followUpDate" in parsed ? (parsed.followUpDate ?? null) : undefined,
+  });
+}
+
+export async function deleteWaitingItem(waitingId: string) {
+  const user = await requireUser();
+  await getDataRepository().deleteWaitingItem(user.id, waitingId);
+}
+
 export async function createReminder(input: unknown) {
   const user = await requireUser();
   const parsed = createReminderSchema.parse(input);
@@ -109,4 +134,19 @@ export async function createReminder(input: unknown) {
     taskId: parsed.taskId ?? null,
     lifeEventId: parsed.lifeEventId ?? null,
   });
+}
+
+export async function updateReminder(reminderId: string, input: unknown) {
+  const user = await requireUser();
+  const parsed = updateReminderSchema.parse(input);
+  return getDataRepository().updateReminder(user.id, reminderId, {
+    ...parsed,
+    taskId: "taskId" in parsed ? (parsed.taskId ?? null) : undefined,
+    lifeEventId: "lifeEventId" in parsed ? (parsed.lifeEventId ?? null) : undefined,
+  });
+}
+
+export async function deleteReminder(reminderId: string) {
+  const user = await requireUser();
+  await getDataRepository().deleteReminder(user.id, reminderId);
 }

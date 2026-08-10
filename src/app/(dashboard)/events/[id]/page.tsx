@@ -4,14 +4,13 @@ import { parseISO } from "date-fns";
 import { Pencil } from "lucide-react";
 
 import { DeleteLifeEventButton } from "@/components/events/delete-life-event-button";
+import { LifeEventAttachments } from "@/components/events/life-event-attachments";
 import { LifeEventProgress } from "@/components/events/life-event-progress";
 import { ActivityItem } from "@/components/sonae/activity-item";
 import { PageHeader } from "@/components/sonae/page-header";
 import { EventStatus, Tag } from "@/components/sonae/status-indicator";
 import { EmptyState } from "@/components/sonae/states";
-import { TaskGroup } from "@/components/tasks/task-group";
 import { Button } from "@/components/ui/button";
-import { WaitingItem } from "@/components/waiting/waiting-item";
 import { formatDateRange, formatShortDate, todayISO } from "@/lib/dates";
 import { getLifeEvent } from "@/server/services/sonae";
 import type { LifeEventDetail } from "@/server/services/types";
@@ -97,45 +96,12 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         )}
       </section>
 
-      <section>
-        <h2 className="type-section border-b border-hairline pb-2.5">Tasks</h2>
-        {event.tasks.length ? (
-          <TaskGroup tasks={event.tasks} showEventLink={false} />
-        ) : (
-          <EmptyState message="No tasks attached to this event." />
-        )}
-      </section>
-
-      <section>
-        <h2 className="type-section border-b border-hairline pb-2.5">Reminders</h2>
-        {event.reminders.length ? (
-          <ul className="divide-y divide-hairline-soft">
-            {event.reminders.map((reminder) => (
-              <li key={reminder.id} className="flex items-baseline justify-between gap-4 py-2.5">
-                <span className="type-body min-w-0 text-ink">{reminder.title}</span>
-                <time dateTime={reminder.remindAt} className="type-mono shrink-0 text-muted">
-                  {formatShortDate(reminder.remindAt.slice(0, 10))}
-                </time>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <EmptyState message="No reminders scheduled for this event." />
-        )}
-      </section>
-
-      <section>
-        <h2 className="type-section border-b border-hairline pb-2.5">Waiting on</h2>
-        {event.waiting.length ? (
-          <ul className="divide-y divide-hairline-soft">
-            {event.waiting.map((item) => (
-              <WaitingItem key={item.id} item={item} />
-            ))}
-          </ul>
-        ) : (
-          <EmptyState message="Nothing here depends on someone else." />
-        )}
-      </section>
+      <LifeEventAttachments
+        eventId={event.id}
+        tasks={event.tasks}
+        reminders={event.reminders}
+        waiting={event.waiting}
+      />
 
       <section>
         <h2 className="type-section border-b border-hairline pb-2.5">Activity</h2>

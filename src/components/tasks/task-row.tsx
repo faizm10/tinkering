@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
@@ -21,11 +21,13 @@ export function TaskRow({
   task,
   eventTitle,
   showEventLink = true,
+  actions,
 }: {
   task: TaskRecord;
   eventTitle?: string;
   /** Off inside an event's own task list, where the link is redundant. */
   showEventLink?: boolean;
+  actions?: ReactNode;
 }) {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
@@ -132,6 +134,8 @@ export function TaskRow({
           </p>
         ) : null}
       </div>
+
+      {actions ? <div className="shrink-0">{actions}</div> : null}
     </motion.li>
   );
 }

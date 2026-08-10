@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 
@@ -15,7 +15,7 @@ import type { WaitingItemRecord } from "@/server/services/types";
  * the elapsed time is set large in mono on the left, and the obligation reads
  * as a sentence on the right.
  */
-export function WaitingItem({ item }: { item: WaitingItemRecord }) {
+export function WaitingItem({ item, actions }: { item: WaitingItemRecord; actions?: ReactNode }) {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
   const [, startTransition] = useTransition();
@@ -80,10 +80,11 @@ export function WaitingItem({ item }: { item: WaitingItemRecord }) {
         ) : null}
       </div>
 
-      <div className="shrink-0 sm:opacity-0 sm:transition-opacity sm:duration-[var(--dur-hover)] sm:group-hover/waiting:opacity-100 sm:group-focus-within/waiting:opacity-100">
+      <div className="flex shrink-0 items-center gap-1 sm:opacity-0 sm:transition-opacity sm:duration-[var(--dur-hover)] sm:group-hover/waiting:opacity-100 sm:group-focus-within/waiting:opacity-100">
         <Button variant="secondary" size="sm" onClick={resolve} disabled={resolved}>
           {resolved ? "Resolved" : "Resolve"}
         </Button>
+        {actions}
       </div>
     </motion.li>
   );
