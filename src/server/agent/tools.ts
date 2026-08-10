@@ -37,21 +37,23 @@ export function emptyDraft(): ProposalDraft {
 }
 
 const emptyArgs = z.object({}).strict();
+const optionalStringArg = () => z.string().trim().min(1).nullable().optional().transform((value) => value ?? undefined);
+const optionalDateArg = () => z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional().transform((value) => value ?? undefined);
 const categoryFilterArgs = z.object({
-  category: z.string().trim().min(2).max(40).optional(),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  category: optionalStringArg(),
+  startDate: optionalDateArg(),
+  endDate: optionalDateArg(),
 }).strict();
 const upcomingTasksArgs = z.object({
-  lifeEventId: z.string().optional(),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  lifeEventId: optionalStringArg(),
+  startDate: optionalDateArg(),
+  endDate: optionalDateArg(),
 }).strict();
-const waitingItemsArgs = z.object({ status: z.enum(["waiting", "follow_up_due", "resolved", "cancelled"]).optional() }).strict();
+const waitingItemsArgs = z.object({ status: z.enum(["waiting", "follow_up_due", "resolved", "cancelled"]).nullable().optional().transform((value) => value ?? undefined) }).strict();
 const resolveDateArgs = z.object({
   expression: z.string().trim().min(1).max(200),
-  timezone: z.string().trim().min(2).max(80).optional(),
-  referenceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  timezone: z.string().trim().min(2).max(80).nullable().optional().transform((value) => value ?? undefined),
+  referenceDate: optionalDateArg(),
 }).strict();
 const proposeLifeEventArgs = z.object({
   title: z.string().trim().min(2).max(120),
@@ -61,21 +63,21 @@ const proposeLifeEventArgs = z.object({
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
 }).strict();
 const proposeTaskArgs = z.object({
-  temporaryId: z.string().trim().min(2).max(60).optional(),
+  temporaryId: z.string().trim().min(2).max(60).nullable().optional().transform((value) => value ?? undefined),
   title: z.string().trim().min(2).max(120),
   description: z.string().trim().max(500).default(""),
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
 }).strict();
 const proposeReminderArgs = z.object({
-  temporaryId: z.string().trim().min(2).max(60).optional(),
+  temporaryId: z.string().trim().min(2).max(60).nullable().optional().transform((value) => value ?? undefined),
   title: z.string().trim().min(2).max(120),
   remindAt: z.string().datetime({ offset: true }),
   relatedTaskId: z.string().trim().min(2).max(60).nullable().optional(),
   relatedTaskIndex: z.number().int().min(0).nullable().optional(),
 }).strict();
 const proposeWaitingItemArgs = z.object({
-  temporaryId: z.string().trim().min(2).max(60).optional(),
+  temporaryId: z.string().trim().min(2).max(60).nullable().optional().transform((value) => value ?? undefined),
   title: z.string().trim().min(2).max(120),
   description: z.string().trim().max(500).default(""),
   waitingOn: z.string().trim().min(2).max(120),
@@ -105,7 +107,7 @@ function defineTool<TSchema extends z.ZodTypeAny>(tool: AgentTool<TSchema>) {
   return tool;
 }
 
-function schemaObject(properties: Record<string, unknown>, required: string[] = []) {
+function schemaObject(properties: Record<string, unknown>, required = Object.keys(properties)) {
   return { type: "object", additionalProperties: false, properties, required };
 }
 
@@ -135,9 +137,9 @@ const tools: AgentTool[] = [
     description: "Return user-owned active life events, optionally filtered by category and date range.",
     schema: categoryFilterArgs,
     parameters: schemaObject({
-      category: { type: "string" },
-      startDate: { type: "string" },
-      endDate: { type: "string" },
+      category: { type: ["string", "null"] },
+      startDate: { type: ["string", "null"] },
+      endDate: { type: ["string", "null"] },
     }),
     async execute(args, context) {
       const events = await context.repository.listLifeEvents(context.userId);
@@ -156,9 +158,9 @@ const tools: AgentTool[] = [
     description: "Return user-owned incomplete tasks, optionally filtered by event and dates.",
     schema: upcomingTasksArgs,
     parameters: schemaObject({
-      lifeEventId: { type: "string" },
-      startDate: { type: "string" },
-      endDate: { type: "string" },
+      lifeEventId: { type: ["string", "null"] },
+      startDate: { type: ["string", "null"] },
+      endDate: { type: ["string", "null"] },
     }),
     async execute(args, context) {
       const tasks = await context.repository.listTasks(context.userId);
@@ -176,7 +178,7 @@ const tools: AgentTool[] = [
     name: "get_waiting_items",
     description: "Return user-owned waiting items.",
     schema: waitingItemsArgs,
-    parameters: schemaObject({ status: { type: "string", enum: ["waiting", "follow_up_due", "resolved", "cancelled"] } }),
+    parameters: schemaObject({ status: { type: ["string", "null"], enum: ["waiting", "follow_up_due", "resolved", "cancelled", null] } }),
     async execute(args, context) {
       const items = await context.repository.listWaitingItems(context.userId);
       return {
@@ -193,9 +195,9 @@ const tools: AgentTool[] = [
     schema: resolveDateArgs,
     parameters: schemaObject({
       expression: { type: "string" },
-      timezone: { type: "string" },
-      referenceDate: { type: "string" },
-    }, ["expression"]),
+      timezone: { type: ["string", "null"] },
+      referenceDate: { type: ["string", "null"] },
+    }),
     async execute(args, context) {
       const now = args.referenceDate ? new Date(`${args.referenceDate}T12:00:00`) : (context.now ?? new Date());
       return resolveDateExpression(args.expression, args.timezone ?? context.timezone, now);
@@ -222,12 +224,12 @@ const tools: AgentTool[] = [
     description: "Add a task to temporary proposal state only.",
     schema: proposeTaskArgs,
     parameters: schemaObject({
-      temporaryId: { type: "string" },
+      temporaryId: { type: ["string", "null"] },
       title: { type: "string" },
       description: { type: "string" },
       priority: { type: "string", enum: ["low", "medium", "high"] },
       dueDate: { type: ["string", "null"] },
-    }, ["title", "description", "priority", "dueDate"]),
+    }),
     async execute(args, context) {
       context.builder.addTask(args);
       return { ok: true };
@@ -238,12 +240,12 @@ const tools: AgentTool[] = [
     description: "Add a reminder to temporary proposal state only.",
     schema: proposeReminderArgs,
     parameters: schemaObject({
-      temporaryId: { type: "string" },
+      temporaryId: { type: ["string", "null"] },
       title: { type: "string" },
       remindAt: { type: "string" },
       relatedTaskId: { type: ["string", "null"] },
       relatedTaskIndex: { type: ["number", "null"] },
-    }, ["title", "remindAt"]),
+    }),
     async execute(args, context) {
       context.builder.addReminder(args);
       return { ok: true };
@@ -254,13 +256,13 @@ const tools: AgentTool[] = [
     description: "Add a waiting item to temporary proposal state only.",
     schema: proposeWaitingItemArgs,
     parameters: schemaObject({
-      temporaryId: { type: "string" },
+      temporaryId: { type: ["string", "null"] },
       title: { type: "string" },
       description: { type: "string" },
       waitingOn: { type: "string" },
       expectedBy: { type: ["string", "null"] },
       followUpDate: { type: ["string", "null"] },
-    }, ["title", "description", "waitingOn", "expectedBy", "followUpDate"]),
+    }),
     async execute(args, context) {
       context.builder.addWaitingItem(args);
       return { ok: true };
@@ -274,7 +276,7 @@ const tools: AgentTool[] = [
       question: { type: "string" },
       missingFields: { type: "array", items: { type: "string" } },
       reason: { type: "string" },
-    }, ["question"]),
+    }),
     async execute(args, context) {
       context.builder.askClarification(args.question);
       context.builder.addAssumption(args.reason);
@@ -289,7 +291,7 @@ const tools: AgentTool[] = [
       summary: { type: "string" },
       category: { type: "string", enum: ["moving", "travel", "purchase_return", "follow_up", "appointment", "document_renewal", "home_maintenance", "general"] },
       confidence: { type: "string", enum: ["low", "medium", "high"] },
-    }, ["summary"]),
+    }),
     async execute(args, context) {
       return { ok: true, proposal: context.builder.finalize(args.summary, args.category, args.confidence) };
     },

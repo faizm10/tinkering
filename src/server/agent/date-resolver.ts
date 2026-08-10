@@ -2,7 +2,22 @@ import { addDays, addMonths, format, isBefore, parseISO, startOfDay } from "date
 
 import { todayISO } from "@/lib/dates";
 
-const months = "january|february|march|april|may|june|july|august|september|october|november|december";
+const months = "jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?";
+
+const monthNames: Record<string, string> = {
+  jan: "january",
+  feb: "february",
+  mar: "march",
+  apr: "april",
+  may: "may",
+  jun: "june",
+  jul: "july",
+  aug: "august",
+  sep: "september",
+  oct: "october",
+  nov: "november",
+  dec: "december",
+};
 
 export type ResolvedDateExpression = {
   raw: string;
@@ -15,8 +30,13 @@ export type ResolvedDateExpression = {
   explanation: string;
 };
 
+function normalizeMonth(month: string) {
+  return monthNames[month.toLowerCase().slice(0, 3)] ?? month;
+}
+
 function nextMonthDay(month: string, day: string, now: Date) {
-  const candidate = new Date(`${month} ${day}, ${now.getFullYear()} 12:00:00`);
+  const monthName = normalizeMonth(month);
+  const candidate = new Date(`${monthName} ${day}, ${now.getFullYear()} 12:00:00`);
   if (isBefore(candidate, startOfDay(now))) candidate.setFullYear(candidate.getFullYear() + 1);
   return todayISO(candidate);
 }
@@ -25,7 +45,7 @@ export function resolveDateExpression(raw: string, timezone = "America/Toronto",
   const normalized = raw.toLowerCase();
   const referenceDate = todayISO(now);
 
-  const range = normalized.match(new RegExp(`\\b(${months})\\s+(\\d{1,2})\\s+(?:to|through|-)\\s+(${months})?\\s*(\\d{1,2})\\b`, "i"));
+  const range = normalized.match(new RegExp(`\\b(${months})\\.?\\s+(\\d{1,2})\\s+(?:to|through|-)\\s+(${months})?\\.?\\s*(\\d{1,2})\\b`, "i"));
   if (range) {
     const startDate = nextMonthDay(range[1], range[2], now);
     const endMonth = range[3] || range[1];
@@ -54,7 +74,7 @@ export function resolveDateExpression(raw: string, timezone = "America/Toronto",
     return { raw, timezone, referenceDate, startDate: date, endDate: date, confidence: "high", requiresClarification: false, explanation: "Interpreted as the next upcoming Monday." };
   }
 
-  const monthDay = normalized.match(new RegExp(`\\b(${months})\\s+(\\d{1,2})\\b`, "i"));
+  const monthDay = normalized.match(new RegExp(`\\b(${months})\\.?\\s+(\\d{1,2})\\b`, "i"));
   if (monthDay) {
     const date = nextMonthDay(monthDay[1], monthDay[2], now);
     return { raw, timezone, referenceDate, startDate: date, endDate: date, confidence: "high", requiresClarification: false, explanation: `Interpreted as the next upcoming ${format(parseISO(date), "MMMM d")}.` };

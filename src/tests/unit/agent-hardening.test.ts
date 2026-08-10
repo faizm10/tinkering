@@ -33,6 +33,13 @@ describe("agent hardening", () => {
     expect(resolved.requiresClarification).toBe(false);
   });
 
+  it("resolves abbreviated month dates deterministically", () => {
+    const resolved = resolveDateExpression("i will be moving on aug 20", "America/Toronto", new Date("2026-08-09T12:00:00"));
+    expect(resolved.startDate).toBe("2026-08-20");
+    expect(resolved.endDate).toBe("2026-08-20");
+    expect(resolved.requiresClarification).toBe(false);
+  });
+
   it("rejects invalid state transitions", () => {
     expect(() => transitionAgentState("created", "ready_for_review")).toThrow();
     expect(transitionAgentState("created", "running")).toBe("running");
@@ -51,6 +58,6 @@ describe("agent hardening", () => {
   });
 
   it("records a versioned prompt identifier", () => {
-    expect(AGENT_PROMPT_VERSION).toBe("sonae-v1");
+    expect(AGENT_PROMPT_VERSION).toBe("sonae-v2");
   });
 });
