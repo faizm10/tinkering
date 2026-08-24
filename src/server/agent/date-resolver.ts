@@ -1,4 +1,4 @@
-import { addDays, addMonths, format, isBefore, parseISO, startOfDay } from "date-fns";
+import { addDays, addMonths, endOfMonth, format, isBefore, parseISO, startOfDay } from "date-fns";
 
 import { todayISO } from "@/lib/dates";
 
@@ -17,6 +17,41 @@ const monthNames: Record<string, string> = {
   oct: "october",
   nov: "november",
   dec: "december",
+};
+
+const weekdays: Record<string, number> = {
+  sunday: 0,
+  sun: 0,
+  monday: 1,
+  mon: 1,
+  tuesday: 2,
+  tue: 2,
+  tues: 2,
+  wednesday: 3,
+  wed: 3,
+  thursday: 4,
+  thu: 4,
+  thur: 4,
+  thurs: 4,
+  friday: 5,
+  fri: 5,
+  saturday: 6,
+  sat: 6,
+};
+
+const numberWords: Record<string, number> = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
 };
 
 export type ResolvedDateExpression = {
@@ -39,6 +74,17 @@ function nextMonthDay(month: string, day: string, now: Date) {
   const candidate = new Date(`${monthName} ${day}, ${now.getFullYear()} 12:00:00`);
   if (isBefore(candidate, startOfDay(now))) candidate.setFullYear(candidate.getFullYear() + 1);
   return todayISO(candidate);
+}
+
+function upcomingWeekday(dayName: string, now: Date) {
+  const target = weekdays[dayName.toLowerCase()];
+  const current = now.getDay();
+  const distance = (target - current + 7) % 7 || 7;
+  return todayISO(addDays(now, distance));
+}
+
+function numberFromMatch(value: string) {
+  return Number(value) || numberWords[value.toLowerCase()] || 0;
 }
 
 export function resolveDateExpression(raw: string, timezone = "America/Toronto", now = new Date()): ResolvedDateExpression {
@@ -67,11 +113,29 @@ export function resolveDateExpression(raw: string, timezone = "America/Toronto",
     return { raw, timezone, referenceDate, startDate: date, endDate: date, confidence: "high", requiresClarification: false, explanation: `Interpreted as ${count} days from the reference date.` };
   }
 
-  if (normalized.includes("next monday")) {
-    const day = now.getDay();
-    const distance = (8 - day) % 7 || 7;
-    const date = todayISO(addDays(now, distance));
-    return { raw, timezone, referenceDate, startDate: date, endDate: date, confidence: "high", requiresClarification: false, explanation: "Interpreted as the next upcoming Monday." };
+  const inWeeks = normalized.match(/\bin\s+(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+weeks?\b/);
+  if (inWeeks) {
+    const count = numberFromMatch(inWeeks[1]);
+    const date = todayISO(addDays(now, count * 7));
+    return { raw, timezone, referenceDate, startDate: date, endDate: date, confidence: "high", requiresClarification: false, explanation: `Interpreted as ${count} weeks from the reference date.` };
+  }
+
+  const inMonths = normalized.match(/\bin\s+(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+months?\b/);
+  if (inMonths) {
+    const count = numberFromMatch(inMonths[1]);
+    const date = todayISO(addMonths(now, count));
+    return { raw, timezone, referenceDate, startDate: date, endDate: date, confidence: "high", requiresClarification: false, explanation: `Interpreted as ${count} months from the reference date.` };
+  }
+
+  if (normalized.includes("end of month") || normalized.includes("end of this month")) {
+    const date = todayISO(endOfMonth(now));
+    return { raw, timezone, referenceDate, startDate: date, endDate: date, confidence: "medium", requiresClarification: false, explanation: "Interpreted as the end of the current month." };
+  }
+
+  const weekday = normalized.match(/\b(?:by|on|this|next)?\s*(sun(?:day)?|mon(?:day)?|tue(?:s|sday|day)?|wed(?:nesday)?|thu(?:r|rs|rsday|rday)?|fri(?:day)?|sat(?:urday)?)\b/i);
+  if (weekday) {
+    const date = upcomingWeekday(weekday[1], now);
+    return { raw, timezone, referenceDate, startDate: date, endDate: date, confidence: "high", requiresClarification: false, explanation: `Interpreted as the next upcoming ${format(parseISO(date), "EEEE")}.` };
   }
 
   const monthDay = normalized.match(new RegExp(`\\b(${months})\\.?\\s+(\\d{1,2})\\b`, "i"));
