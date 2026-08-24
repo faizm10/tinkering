@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { MockAgentProvider } from "@/server/providers/agent/mock-agent";
 import { MemoryDataRepository } from "@/server/providers/data/memory-repository";
-import { runAgentEvaluations } from "@/server/agent/evaluator";
+import { agentEvalCases, runAgentEvaluations } from "@/server/agent/evaluator";
 
 describe("agent boundary", () => {
   it("does not allow approval while clarification is pending", async () => {
@@ -22,7 +22,7 @@ describe("agent boundary", () => {
 
   it("runs the default mock eval suite", async () => {
     const results = await runAgentEvaluations();
-    expect(results).toHaveLength(25);
-    expect(results.filter((result) => result.passed)).toHaveLength(25);
+    expect(results).toHaveLength(agentEvalCases.length);
+    expect(results.filter((result) => result.passed)).toHaveLength(agentEvalCases.length);
   });
 });
