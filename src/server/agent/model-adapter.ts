@@ -49,6 +49,7 @@ type ResponseLike = {
 
 function proposalJsonSchema() {
   const isoDate = { anyOf: [{ type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" }, { type: "null" }] };
+  const categories = ["moving", "travel", "purchase_return", "follow_up", "appointment", "document_renewal", "home_maintenance", "bill_payment", "school_admin", "subscription", "insurance_claim", "general", "purchase", "follow-up", "refund"];
   return {
     type: "object",
     additionalProperties: false,
@@ -56,14 +57,14 @@ function proposalJsonSchema() {
     properties: {
       version: { type: "number", enum: [1] },
       summary: { type: "string" },
-      category: { type: "string" },
+      category: { type: "string", enum: categories },
       confidence: { type: "string", enum: ["low", "medium", "high"] },
       assumptions: { type: "array", maxItems: 5, items: { type: "string", maxLength: 180 } },
       lifeEvent: {
         type: "object",
         additionalProperties: false,
         required: ["title", "description", "category", "startDate", "endDate"],
-        properties: { title: { type: "string" }, description: { type: "string" }, category: { type: "string" }, startDate: isoDate, endDate: isoDate },
+        properties: { title: { type: "string" }, description: { type: "string" }, category: { type: "string", enum: categories }, startDate: isoDate, endDate: isoDate },
       },
       tasks: {
         type: "array",
