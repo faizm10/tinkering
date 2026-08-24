@@ -37,6 +37,20 @@ export function emptyDraft(): ProposalDraft {
 }
 
 const emptyArgs = z.object({}).strict();
+const planningCategories = [
+  "moving",
+  "travel",
+  "purchase_return",
+  "follow_up",
+  "appointment",
+  "document_renewal",
+  "home_maintenance",
+  "bill_payment",
+  "school_admin",
+  "subscription",
+  "insurance_claim",
+  "general",
+] as const;
 const optionalStringArg = () => z.string().trim().min(1).nullable().optional().transform((value) => value ?? undefined);
 const optionalDateArg = () => z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional().transform((value) => value ?? undefined);
 const categoryFilterArgs = z.object({
@@ -58,7 +72,7 @@ const resolveDateArgs = z.object({
 const proposeLifeEventArgs = z.object({
   title: z.string().trim().min(2).max(120),
   description: z.string().trim().max(700).default(""),
-  category: z.enum(["moving", "travel", "purchase_return", "follow_up", "appointment", "document_renewal", "home_maintenance", "general"]),
+  category: z.enum(planningCategories),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
 }).strict();
@@ -89,9 +103,12 @@ const askClarificationArgs = z.object({
   missingFields: z.array(z.string().trim().min(1).max(60)).max(5).default([]),
   reason: z.string().trim().min(2).max(180).default("A required planning detail is missing."),
 }).strict();
+const recordAssumptionArgs = z.object({
+  assumption: z.string().trim().min(2).max(180),
+}).strict();
 const finalizeProposalArgs = z.object({
   summary: z.string().trim().min(2).max(500),
-  category: z.enum(["moving", "travel", "purchase_return", "follow_up", "appointment", "document_renewal", "home_maintenance", "general"]).default("general"),
+  category: z.enum(planningCategories).default("general"),
   confidence: z.enum(["low", "medium", "high"]).default("medium"),
 }).strict();
 
@@ -210,7 +227,7 @@ const tools: AgentTool[] = [
     parameters: schemaObject({
       title: { type: "string" },
       description: { type: "string" },
-      category: { type: "string", enum: ["moving", "travel", "purchase_return", "follow_up", "appointment", "document_renewal", "home_maintenance", "general"] },
+      category: { type: "string", enum: planningCategories },
       startDate: { type: ["string", "null"] },
       endDate: { type: ["string", "null"] },
     }, ["title", "description", "category", "startDate", "endDate"]),
@@ -284,12 +301,22 @@ const tools: AgentTool[] = [
     },
   }),
   defineTool({
+    name: "record_assumption",
+    description: "Record one explicit assumption in temporary proposal state.",
+    schema: recordAssumptionArgs,
+    parameters: schemaObject({ assumption: { type: "string" } }),
+    async execute(args, context) {
+      context.builder.addAssumption(args.assumption);
+      return { ok: true };
+    },
+  }),
+  defineTool({
     name: "finalize_proposal",
     description: "Validate temporary proposal state and mark it ready for review.",
     schema: finalizeProposalArgs,
     parameters: schemaObject({
       summary: { type: "string" },
-      category: { type: "string", enum: ["moving", "travel", "purchase_return", "follow_up", "appointment", "document_renewal", "home_maintenance", "general"] },
+      category: { type: "string", enum: planningCategories },
       confidence: { type: "string", enum: ["low", "medium", "high"] },
     }),
     async execute(args, context) {
@@ -374,23 +401,54 @@ export function inferProposalFromInput(input: string): AgentProposal {
       clarificationQuestions: ["What date are you moving?"],
     };
   }
-  const category = lower.includes("trip") || lower.includes("travel") || lower.includes("going to") ? "travel" : lower.includes("bought") || lower.includes("purchase") || lower.includes("return") ? "purchase_return" : lower.includes("move") || lower.includes("moving") ? "moving" : "general";
+  const category =
+    lower.includes("trip") || lower.includes("travel") || lower.includes("going to")
+      ? "travel"
+      : lower.includes("bought") || lower.includes("purchase") || lower.includes("return")
+        ? "purchase_return"
+        : lower.includes("move") || lower.includes("moving")
+          ? "moving"
+          : lower.includes("bill") || lower.includes("rent") || lower.includes("invoice") || lower.includes("payment due")
+            ? "bill_payment"
+            : lower.includes("tuition") || lower.includes("enroll") || lower.includes("registration") || (lower.includes("school") && (lower.includes("form") || lower.includes("paperwork") || lower.includes("deadline")))
+              ? "school_admin"
+              : lower.includes("subscription") || lower.includes("membership") || lower.includes("trial") || lower.includes("gym")
+                ? "subscription"
+                : lower.includes("insurance") || lower.includes("claim") || lower.includes("adjuster")
+                  ? "insurance_claim"
+                  : "general";
+  const categoryLabel = category.replace("_", " ");
   return {
     version: 1,
-    summary: `Created a ${category === "purchase_return" ? "purchase return" : category} plan.`,
+    summary: `Created a ${categoryLabel} plan.`,
     category,
     confidence: resolved.confidence,
     assumptions: resolved.requiresClarification ? [resolved.explanation] : [],
     lifeEvent: {
-      title: category === "travel" ? "Upcoming Trip" : category === "purchase_return" ? "Purchase Return Window" : category === "moving" ? "Move to New House" : "Sonae Plan",
+      title:
+        category === "travel"
+          ? "Upcoming Trip"
+          : category === "purchase_return"
+            ? "Purchase Return Window"
+            : category === "moving"
+              ? "Move to New House"
+              : category === "bill_payment"
+                ? "Bill Payment"
+                : category === "school_admin"
+                  ? "School Admin Deadline"
+                  : category === "subscription"
+                    ? "Subscription Review"
+                    : category === "insurance_claim"
+                      ? "Insurance Claim"
+                      : "Sonae Plan",
       description: "Organize the practical tasks, deadlines, and follow-ups for this situation.",
       category,
       startDate: todayISO(),
       endDate: resolved.endDate,
     },
     tasks: [
-      { temporaryId: "task_1", title: category === "moving" ? "Update important addresses" : "Confirm next step", description: "Handle the most time-sensitive item first.", priority: "high", dueDate: resolved.endDate },
-      { temporaryId: "task_2", title: category === "moving" ? "Transfer utilities and services" : "Set a follow-up reminder", description: "Reduce last-minute work by handling this ahead of the deadline.", priority: "medium", dueDate: resolved.endDate },
+      { temporaryId: "task_1", title: category === "moving" ? "Update important addresses" : category === "bill_payment" ? "Review the amount due" : category === "subscription" ? "Check renewal terms" : category === "insurance_claim" ? "Gather claim documents" : "Confirm next step", description: "Handle the most time-sensitive item first.", priority: "high", dueDate: resolved.endDate },
+      { temporaryId: "task_2", title: category === "moving" ? "Transfer utilities and services" : category === "school_admin" ? "Submit required paperwork" : category === "bill_payment" ? "Save payment confirmation" : category === "insurance_claim" ? "Check claim status" : "Set a follow-up reminder", description: "Reduce last-minute work by handling this ahead of the deadline.", priority: "medium", dueDate: resolved.endDate },
     ],
     reminders: [],
     waitingItems: [],
