@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 import { DateInput, Field, Input, Select, Textarea } from "@/components/ui/field";
 import { formatShortDate } from "@/lib/dates";
 import { collapseVariants, itemVariants, listVariants, transition } from "@/lib/motion";
+import { clearProposalTasks, removeProposalTask } from "@/lib/proposal-draft";
 import type { AgentProposal, ProposalCategory } from "@/lib/validations/proposal";
 
 /**
@@ -170,7 +171,25 @@ export function ProposalReview({
       </motion.section>
 
       <motion.section variants={reduceMotion ? undefined : itemVariants}>
-        <SectionHead title="Tasks" count={draft.tasks.length} />
+        <SectionHead
+          title="Tasks"
+          count={draft.tasks.length}
+          action={
+            draft.tasks.length > 0 ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setDraft(clearProposalTasks(draft))}
+                disabled={pending}
+                aria-label="Clear all generated tasks"
+              >
+                <Trash2 className="size-4" />
+                Clear all
+              </Button>
+            ) : null
+          }
+        />
         {draft.tasks.length === 0 ? (
           <p className="type-meta py-4">No tasks in this plan.</p>
         ) : (
@@ -179,9 +198,7 @@ export function ProposalReview({
               {draft.tasks.map((task, index) => (
                 <EditableRow
                   key={`task-${index}`}
-                  onRemove={() =>
-                    setDraft({ ...draft, tasks: draft.tasks.filter((_, i) => i !== index) })
-                  }
+                  onRemove={() => setDraft(removeProposalTask(draft, index))}
                   removeLabel={`Remove task ${task.title}`}
                   reduceMotion={Boolean(reduceMotion)}
                 >
@@ -378,15 +395,26 @@ export function ProposalReview({
   );
 }
 
-function SectionHead({ title, count }: { title: string; count?: number }) {
+function SectionHead({
+  title,
+  count,
+  action,
+}: {
+  title: string;
+  count?: number;
+  action?: React.ReactNode;
+}) {
   return (
-    <div className="flex items-baseline gap-2.5 border-b border-hairline pb-2.5">
-      <h2 className="type-section">{title}</h2>
-      {typeof count === "number" && count > 0 ? (
-        <span className="type-mono text-muted" aria-hidden>
-          {count}
-        </span>
-      ) : null}
+    <div className="flex flex-wrap items-center gap-2.5 border-b border-hairline pb-2.5">
+      <div className="flex items-baseline gap-2.5">
+        <h2 className="type-section">{title}</h2>
+        {typeof count === "number" && count > 0 ? (
+          <span className="type-mono text-muted" aria-hidden>
+            {count}
+          </span>
+        ) : null}
+      </div>
+      {action ? <div className="ml-auto">{action}</div> : null}
     </div>
   );
 }
