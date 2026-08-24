@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { ThemeScript } from "@/components/theme/theme-script";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -39,10 +41,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <body className="min-h-full bg-canvas text-ink">
-        {children}
-        <Toaster />
-        <Analytics />
-        <SpeedInsights />
+        <ThemeScript />
+        <ThemeProvider>
+          {children}
+          <Toaster />
+          <Analytics />
+          <SpeedInsights />
+        </ThemeProvider>
       </body>
     </html>
   );
