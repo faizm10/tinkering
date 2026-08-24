@@ -11,6 +11,10 @@ const proposalCategories = [
   "appointment",
   "document_renewal",
   "home_maintenance",
+  "bill_payment",
+  "school_admin",
+  "subscription",
+  "insurance_claim",
   "general",
   // Legacy categories accepted so previously created demo proposals remain readable.
   "purchase",
@@ -34,6 +38,16 @@ function normalizeProposalCategory(value: unknown) {
     renewal: "document_renewal",
     home: "home_maintenance",
     maintenance: "home_maintenance",
+    bill: "bill_payment",
+    payment: "bill_payment",
+    rent: "bill_payment",
+    tuition: "school_admin",
+    school: "school_admin",
+    enrollment: "school_admin",
+    subscription: "subscription",
+    membership: "subscription",
+    insurance: "insurance_claim",
+    claim: "insurance_claim",
   };
 
   return aliases[normalized] ?? normalized;
