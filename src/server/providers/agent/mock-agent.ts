@@ -233,6 +233,83 @@ function buildScenario(input: string): Scenario {
     };
   }
 
+  if (lower.includes("bill") || lower.includes("rent") || lower.includes("invoice") || lower.includes("payment due")) {
+    const dueDate = resolved.endDate ?? resolveDateExpression("Friday").endDate;
+    const reminderDate = dueDate ? todayISO(addDays(new Date(`${dueDate}T12:00:00`), -1)) : null;
+    return {
+      category: "bill_payment",
+      title: lower.includes("rent") ? "Rent Payment" : "Bill Payment",
+      summary: "Created a bill-payment plan.",
+      description: "Track the payment deadline and keep confirmation after paying.",
+      startDate: todayISO(),
+      endDate: dueDate,
+      tasks: [
+        { title: "Review the amount due", description: "Check the bill amount, due date, and payment method.", priority: "high", dueDate: reminderDate ?? dueDate },
+        { title: "Make the payment", description: "Pay through the correct account or portal before the deadline.", priority: "high", dueDate },
+        { title: "Save payment confirmation", description: "Keep the receipt or confirmation number for records.", priority: "medium", dueDate },
+      ],
+      reminders: reminderBefore(dueDate, "Payment deadline approaching"),
+    };
+  }
+
+  if (lower.includes("tuition") || lower.includes("enroll") || lower.includes("enrollment") || lower.includes("registration") || (lower.includes("school") && (lower.includes("form") || lower.includes("paperwork") || lower.includes("deadline")))) {
+    const dueDate = resolved.endDate ?? resolveDateExpression("end of month").endDate;
+    return {
+      category: "school_admin",
+      title: "School Admin Deadline",
+      summary: "Created a school administration plan.",
+      description: "Organize forms, payment, and confirmation before the school deadline.",
+      startDate: todayISO(),
+      endDate: dueDate,
+      tasks: [
+        { title: "Review required forms", description: "Confirm which forms, IDs, or portal steps are required.", priority: "high", dueDate },
+        { title: "Submit school paperwork", description: "Complete the required school forms before the deadline.", priority: "high", dueDate },
+        { title: "Save submission confirmation", description: "Keep a screenshot, receipt, or confirmation email.", priority: "medium", dueDate },
+      ],
+      reminders: reminderBefore(dueDate, "School deadline approaching"),
+    };
+  }
+
+  if (lower.includes("subscription") || lower.includes("membership") || lower.includes("trial") || lower.includes("gym")) {
+    const dueDate = resolved.endDate ?? resolveDateExpression("in two weeks").endDate;
+    return {
+      category: "subscription",
+      title: "Subscription Review",
+      summary: "Created a subscription review plan.",
+      description: "Review renewal terms and cancel or keep the subscription before the deadline.",
+      startDate: todayISO(),
+      endDate: dueDate,
+      tasks: [
+        { title: "Check renewal terms", description: "Confirm the renewal date, price, and cancellation rules.", priority: "high", dueDate },
+        { title: "Decide whether to keep it", description: "Choose whether the subscription is still worth keeping.", priority: "high", dueDate },
+        { title: "Save account confirmation", description: "Keep proof of any account change or cancellation confirmation.", priority: "medium", dueDate },
+      ],
+      reminders: reminderBefore(dueDate, "Subscription deadline approaching"),
+      waitingItems: lower.includes("support")
+        ? [{ temporaryId: "waiting_1", title: "Support confirmation", description: "Waiting for support to confirm the account change.", waitingOn: "Support", expectedBy: dueDate, followUpDate: dueDate }]
+        : [],
+    };
+  }
+
+  if (lower.includes("insurance") || lower.includes("claim") || lower.includes("adjuster")) {
+    const dueDate = resolved.endDate ?? todayISO(addDays(new Date(), 7));
+    return {
+      category: "insurance_claim",
+      title: "Insurance Claim",
+      summary: "Created an insurance claim follow-up plan.",
+      description: "Track claim documents, follow-up timing, and any response from the insurer.",
+      startDate: todayISO(),
+      endDate: dueDate,
+      tasks: [
+        { title: "Gather claim documents", description: "Collect photos, receipts, policy details, and claim numbers.", priority: "high", dueDate },
+        { title: "Check claim status", description: "Review the insurer portal or latest message for the next required step.", priority: "high", dueDate },
+        { title: "Record claim reference", description: "Save the claim number and any adjuster contact details.", priority: "medium", dueDate },
+      ],
+      reminders: reminderBefore(dueDate, "Insurance claim follow-up"),
+      waitingItems: [{ temporaryId: "waiting_1", title: "Insurer response", description: "Waiting for the insurer or adjuster to respond.", waitingOn: "Insurance company", expectedBy: dueDate, followUpDate: dueDate }],
+    };
+  }
+
   if (lower.includes("landlord") || lower.includes("follow up") || lower.includes("emailed")) {
     const followUpDate = resolved.endDate ?? resolveDateExpression("next Monday").endDate;
     return {
