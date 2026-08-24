@@ -2,9 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Sonae is a single light system (design.md defines no dark palette).
-   Binding `dark:` to a class that is never applied keeps shadcn's built-in
-   dark variants inert instead of letting OS dark mode half-apply them. */
+/* Theme variants are class-based so the browser can persist an explicit
+   light/dark choice instead of following OS changes unexpectedly. */
 @custom-variant dark (&:is(.dark *));
 
 /* ------------------------------------------------------------------
@@ -15,6 +14,8 @@
    ------------------------------------------------------------------ */
 
 :root {
+  color-scheme: light;
+
   /* Surfaces */
   --canvas: #f7f7f4;
   --canvas-soft: #fafaf7;
@@ -81,6 +82,61 @@
   --input: var(--hairline-strong);
   --ring: var(--primary);
   --radius: 0.5rem;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --canvas: #171713;
+  --canvas-soft: #1d1d18;
+  --surface: #23231d;
+  --surface-strong: #303027;
+
+  /* Text */
+  --ink: #f4f0e7;
+  --body: #c9c2b4;
+  --muted: #a59c8b;
+  --muted-soft: #756f63;
+
+  /* Hairlines */
+  --hairline: #37352d;
+  --hairline-soft: #2d2c25;
+  --hairline-strong: #4b483d;
+
+  /* Action */
+  --primary: #ff6a2a;
+  --primary-active: #ff7d45;
+  --on-primary: #171713;
+
+  /* Semantic */
+  --success: #54c89c;
+  --error: #ff6388;
+
+  /* Agent stages */
+  --agent-thinking: #8d6655;
+  --agent-checking: #5f8c65;
+  --agent-reading: #647f9f;
+  --agent-organizing: #79629a;
+  --agent-done: #9a6c34;
+
+  /* shadcn bridge */
+  --background: var(--canvas);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --primary-foreground: var(--on-primary);
+  --secondary: var(--surface-strong);
+  --secondary-foreground: var(--ink);
+  --muted-foreground: var(--muted);
+  --accent: var(--hairline-soft);
+  --accent-foreground: var(--ink);
+  --destructive: var(--error);
+  --border: var(--hairline);
+  --input: var(--hairline-strong);
+  --ring: var(--primary);
 }
 
 @theme inline {
