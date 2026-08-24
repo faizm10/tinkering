@@ -26,4 +26,27 @@ describe("MockAgentProvider", () => {
     expect(result.proposal.clarificationQuestions).toHaveLength(0);
     expect(result.proposal.tasks.length).toBeGreaterThan(1);
   });
+
+  it("creates bill payment plans with proof-of-payment follow-up", async () => {
+    const result = await provider.createProposal("My rent payment is due by Friday.");
+
+    expect(result.proposal.category).toBe("bill_payment");
+    expect(result.proposal.tasks.map((task) => task.title)).toContain("Save payment confirmation");
+    expect(result.proposal.reminders.length).toBeGreaterThan(0);
+  });
+
+  it("creates subscription review plans without claiming cancellation happened", async () => {
+    const result = await provider.createProposal("My gym membership trial renews in two weeks.");
+
+    expect(result.proposal.category).toBe("subscription");
+    expect(result.proposal.tasks.map((task) => task.title)).toContain("Decide whether to keep it");
+    expect(result.proposal.summary.toLowerCase()).not.toContain("cancelled");
+  });
+
+  it("tracks insurance claim waiting items", async () => {
+    const result = await provider.createProposal("I filed an insurance claim and need to follow up with the adjuster next Friday.");
+
+    expect(result.proposal.category).toBe("insurance_claim");
+    expect(result.proposal.waitingItems[0]?.waitingOn).toBe("Insurance company");
+  });
 });
