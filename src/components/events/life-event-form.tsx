@@ -17,6 +17,10 @@ const categories = [
   { value: "appointment", label: "Appointment" },
   { value: "document_renewal", label: "Document renewal" },
   { value: "home_maintenance", label: "Home maintenance" },
+  { value: "bill_payment", label: "Bill payment" },
+  { value: "school_admin", label: "School admin" },
+  { value: "subscription", label: "Subscription" },
+  { value: "insurance_claim", label: "Insurance claim" },
   { value: "general", label: "General" },
 ];
 
