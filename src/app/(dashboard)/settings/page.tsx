@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/sonae/page-header";
 import { ProfileForm } from "@/components/settings/profile-form";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { getDashboardData } from "@/server/services/sonae";
 
 export default async function SettingsPage() {
@@ -13,6 +14,14 @@ export default async function SettingsPage() {
         <h2 className="type-section border-b border-hairline pb-2.5">Profile</h2>
         <div className="pt-5">
           <ProfileForm profile={data.profile} />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="type-section border-b border-hairline pb-2.5">Appearance</h2>
+        <div className="space-y-3 pt-4">
+          <p className="type-body text-body">Choose the color theme for this browser.</p>
+          <ThemeToggle />
         </div>
       </section>
 
