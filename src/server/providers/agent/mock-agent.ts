@@ -310,6 +310,24 @@ function buildScenario(input: string): Scenario {
     };
   }
 
+  if (lower.includes("internship") || lower.includes("resume") || lower.includes("linkedin") || lower.includes("interview") || lower.includes("job")) {
+    const endDate = resolved.endDate ?? "2026-12-31";
+    return {
+      category: "career",
+      title: "Career Plan",
+      summary: "Created a career preparation plan.",
+      description: "Prepare a stronger candidate profile, application routine, and interview practice loop.",
+      startDate: todayISO(),
+      endDate,
+      tasks: [
+        { title: "Update resume and profile", description: "Polish the resume, LinkedIn, and project descriptions.", priority: "high", dueDate: endDate },
+        { title: "Track applications and follow-ups", description: "Keep a simple application tracker with next actions.", priority: "high", dueDate: endDate },
+        { title: "Practice interviews", description: "Schedule mock interviews and review feedback.", priority: "medium", dueDate: endDate },
+      ],
+      reminders: reminderBefore(endDate, "Review career plan progress"),
+    };
+  }
+
   if (lower.includes("landlord") || lower.includes("follow up") || lower.includes("emailed")) {
     const followUpDate = resolved.endDate ?? resolveDateExpression("next Monday").endDate;
     return {

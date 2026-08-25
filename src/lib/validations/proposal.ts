@@ -15,6 +15,7 @@ const proposalCategories = [
   "school_admin",
   "subscription",
   "insurance_claim",
+  "career",
   "general",
   // Legacy categories accepted so previously created demo proposals remain readable.
   "purchase",
@@ -48,6 +49,15 @@ function normalizeProposalCategory(value: unknown) {
     membership: "subscription",
     insurance: "insurance_claim",
     claim: "insurance_claim",
+    career: "career",
+    job: "career",
+    jobs: "career",
+    internship: "career",
+    internships: "career",
+    interview: "career",
+    interviews: "career",
+    resume: "career",
+    linkedin: "career",
   };
 
   return aliases[normalized] ?? normalized;

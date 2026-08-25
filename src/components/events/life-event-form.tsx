@@ -21,6 +21,7 @@ const categories = [
   { value: "school_admin", label: "School admin" },
   { value: "subscription", label: "Subscription" },
   { value: "insurance_claim", label: "Insurance claim" },
+  { value: "career", label: "Career" },
   { value: "general", label: "General" },
 ];
 
