@@ -3,7 +3,7 @@
 import { useId, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CornerDownLeft } from "lucide-react";
+import { ArrowRight, CornerDownLeft, PencilLine, Sparkles } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import {
@@ -14,7 +14,7 @@ import {
 } from "@/components/agent/agent-timeline";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/field";
-import { collapseVariants } from "@/lib/motion";
+import { collapseVariants, easing } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 const examplePrompts = [
@@ -22,6 +22,12 @@ const examplePrompts = [
   "Remind me to follow up next Monday.",
   "I have 30 days to return these headphones.",
   "I’m travelling from August 16 to August 20.",
+];
+
+const draftingLines = [
+  { label: "Finding the dates", width: "w-8/12", color: "bg-agent-reading" },
+  { label: "Shaping the plan", width: "w-10/12", color: "bg-agent-thinking" },
+  { label: "Sorting the next steps", width: "w-7/12", color: "bg-agent-organizing" },
 ];
 
 type Result = {
@@ -122,9 +128,12 @@ export function AgentComposer({
       exit="exit"
       className="overflow-hidden border-t border-hairline bg-canvas-soft"
     >
-      <div className="p-4 sm:px-5">
-        <AgentTimeline stages={["understanding"]} activeStage="understanding" />
-        <p className="type-meta mt-2">Reading your situation and drafting a plan.</p>
+      <div className="grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_13rem] sm:px-5">
+        <div>
+          <AgentTimeline stages={["understanding"]} activeStage="understanding" />
+          <p className="type-meta mt-2">Reading your situation and drafting a plan.</p>
+        </div>
+        <DraftingAnimation reduceMotion={Boolean(reduceMotion)} />
       </div>
     </motion.div>
   ) : error ? (
@@ -254,8 +263,17 @@ export function AgentComposer({
             disabled={pending || tooShort}
             className="ml-auto"
           >
-            {pending ? "Drafting…" : "Draft a plan"}
-            {pending ? null : <CornerDownLeft className="size-3.5" />}
+            {pending ? (
+              <>
+                <Sparkles className="size-3.5 motion-safe:animate-pulse" />
+                Drafting…
+              </>
+            ) : (
+              <>
+                Draft a plan
+                <CornerDownLeft className="size-3.5" />
+              </>
+            )}
           </Button>
         </div>
 
@@ -296,6 +314,71 @@ export function AgentComposer({
           {statusPanel}
         </AnimatePresence>
       </div>
+    </div>
+  );
+}
+
+function DraftingAnimation({ reduceMotion }: { reduceMotion: boolean }) {
+  return (
+    <div
+      className="relative min-h-[7.25rem] overflow-hidden rounded-[var(--radius-control)] border border-hairline bg-surface p-3"
+      aria-hidden
+    >
+      <motion.div
+        className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-[var(--radius-control)] bg-primary/10 text-primary"
+        animate={
+          reduceMotion ? undefined : { rotate: [0, -7, 7, 0], y: [0, -1, 1, 0] }
+        }
+        transition={{ duration: 1.4, repeat: Infinity, ease: easing.inOut }}
+      >
+        <PencilLine className="size-4" />
+      </motion.div>
+
+      <div className="space-y-2.5 pr-10">
+        {draftingLines.map((line, index) => (
+          <div key={line.label} className="space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <motion.span
+                className={cn("size-1.5 rounded-full", line.color)}
+                animate={
+                  reduceMotion
+                    ? undefined
+                    : { scale: [1, 1.45, 1], opacity: [0.7, 1, 0.7] }
+                }
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  delay: index * 0.18,
+                  ease: easing.inOut,
+                }}
+              />
+              <span className="type-meta text-[0.75rem]">{line.label}</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-[var(--radius-pill)] bg-hairline-soft">
+              <motion.div
+                className={cn("h-full rounded-[var(--radius-pill)]", line.color, line.width)}
+                initial={reduceMotion ? false : { x: "-115%" }}
+                animate={reduceMotion ? undefined : { x: ["-115%", "0%", "115%"] }}
+                transition={{
+                  duration: 1.8,
+                  repeat: Infinity,
+                  delay: index * 0.2,
+                  ease: easing.inOut,
+                }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <motion.div
+        className="absolute bottom-3 left-3 flex items-center gap-1.5 text-primary"
+        animate={reduceMotion ? undefined : { x: [0, 5, 0] }}
+        transition={{ duration: 1.1, repeat: Infinity, ease: easing.inOut }}
+      >
+        <span className="h-px w-8 bg-primary/45" />
+        <span className="size-1.5 rounded-full bg-primary" />
+      </motion.div>
     </div>
   );
 }
