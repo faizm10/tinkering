@@ -49,7 +49,7 @@ type ResponseLike = {
 
 function proposalJsonSchema() {
   const isoDate = { anyOf: [{ type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" }, { type: "null" }] };
-  const categories = ["moving", "travel", "purchase_return", "follow_up", "appointment", "document_renewal", "home_maintenance", "bill_payment", "school_admin", "subscription", "insurance_claim", "general", "purchase", "follow-up", "refund"];
+  const categories = ["moving", "travel", "purchase_return", "follow_up", "appointment", "document_renewal", "home_maintenance", "bill_payment", "school_admin", "subscription", "insurance_claim", "career", "general", "purchase", "follow-up", "refund"];
   return {
     type: "object",
     additionalProperties: false,

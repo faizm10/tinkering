@@ -49,4 +49,12 @@ describe("MockAgentProvider", () => {
     expect(result.proposal.category).toBe("insurance_claim");
     expect(result.proposal.waitingItems[0]?.waitingOn).toBe("Insurance company");
   });
+
+  it("creates career plans for internship preparation", async () => {
+    const result = await provider.createProposal("I need to prepare for internship applications by December 31.");
+
+    expect(result.proposal.category).toBe("career");
+    expect(result.proposal.lifeEvent.category).toBe("career");
+    expect(result.proposal.tasks.map((task) => task.title)).toContain("Track applications and follow-ups");
+  });
 });

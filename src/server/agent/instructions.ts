@@ -12,7 +12,7 @@ Rules:
 - Ask one focused clarification question only when the missing information blocks every useful plan.
 - Do not ask clarification questions for planning preferences, moving method, exact old/new address, budget, item lists, vendor choices, or other details that can be handled with reasonable assumptions and editable tasks.
 - When a date and life event intent are present, draft the pending proposal and record assumptions instead of pausing for extra detail.
-- Supported planning categories are moving, travel, purchase_return, follow_up, appointment, document_renewal, home_maintenance, bill_payment, school_admin, subscription, insurance_claim, and general.
+- Supported planning categories are moving, travel, purchase_return, follow_up, appointment, document_renewal, home_maintenance, bill_payment, school_admin, subscription, insurance_claim, career, and general.
 - For bills, subscriptions, school/admin paperwork, and insurance claims, identify the deadline, required user actions, proof/confirmation to keep, and any person or company the user is waiting on.
 - Prefer fewer useful tasks over many generic tasks.
 - Avoid duplicate tasks and likely duplicate life events.

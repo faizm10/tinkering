@@ -49,6 +49,7 @@ const planningCategories = [
   "school_admin",
   "subscription",
   "insurance_claim",
+  "career",
   "general",
 ] as const;
 const optionalStringArg = () => z.string().trim().min(1).nullable().optional().transform((value) => value ?? undefined);
@@ -414,9 +415,11 @@ export function inferProposalFromInput(input: string): AgentProposal {
               ? "school_admin"
               : lower.includes("subscription") || lower.includes("membership") || lower.includes("trial") || lower.includes("gym")
                 ? "subscription"
-                : lower.includes("insurance") || lower.includes("claim") || lower.includes("adjuster")
-                  ? "insurance_claim"
-                  : "general";
+                  : lower.includes("insurance") || lower.includes("claim") || lower.includes("adjuster")
+                    ? "insurance_claim"
+                    : lower.includes("internship") || lower.includes("resume") || lower.includes("linkedin") || lower.includes("interview") || lower.includes("job")
+                      ? "career"
+                      : "general";
   const categoryLabel = category.replace("_", " ");
   return {
     version: 1,
@@ -440,6 +443,8 @@ export function inferProposalFromInput(input: string): AgentProposal {
                     ? "Subscription Review"
                     : category === "insurance_claim"
                       ? "Insurance Claim"
+                      : category === "career"
+                        ? "Career Plan"
                       : "Sonae Plan",
       description: "Organize the practical tasks, deadlines, and follow-ups for this situation.",
       category,
@@ -447,8 +452,8 @@ export function inferProposalFromInput(input: string): AgentProposal {
       endDate: resolved.endDate,
     },
     tasks: [
-      { temporaryId: "task_1", title: category === "moving" ? "Update important addresses" : category === "bill_payment" ? "Review the amount due" : category === "subscription" ? "Check renewal terms" : category === "insurance_claim" ? "Gather claim documents" : "Confirm next step", description: "Handle the most time-sensitive item first.", priority: "high", dueDate: resolved.endDate },
-      { temporaryId: "task_2", title: category === "moving" ? "Transfer utilities and services" : category === "school_admin" ? "Submit required paperwork" : category === "bill_payment" ? "Save payment confirmation" : category === "insurance_claim" ? "Check claim status" : "Set a follow-up reminder", description: "Reduce last-minute work by handling this ahead of the deadline.", priority: "medium", dueDate: resolved.endDate },
+      { temporaryId: "task_1", title: category === "moving" ? "Update important addresses" : category === "bill_payment" ? "Review the amount due" : category === "subscription" ? "Check renewal terms" : category === "insurance_claim" ? "Gather claim documents" : category === "career" ? "Update resume and profile" : "Confirm next step", description: "Handle the most time-sensitive item first.", priority: "high", dueDate: resolved.endDate },
+      { temporaryId: "task_2", title: category === "moving" ? "Transfer utilities and services" : category === "school_admin" ? "Submit required paperwork" : category === "bill_payment" ? "Save payment confirmation" : category === "insurance_claim" ? "Check claim status" : category === "career" ? "Track applications and follow-ups" : "Set a follow-up reminder", description: "Reduce last-minute work by handling this ahead of the deadline.", priority: "medium", dueDate: resolved.endDate },
     ],
     reminders: [],
     waitingItems: [],

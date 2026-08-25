@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { clearProposalTasks, removeProposalTask } from "@/lib/proposal-draft";
-import { agentProposalSchema } from "@/lib/validations/proposal";
+import { agentProposalSchema, approvalPayloadSchema } from "@/lib/validations/proposal";
 
 describe("agentProposalSchema", () => {
   it("accepts a valid proposal", () => {
@@ -76,6 +76,36 @@ describe("agentProposalSchema", () => {
 
     expect(proposal.category).toBe("bill_payment");
     expect(proposal.lifeEvent.category).toBe("bill_payment");
+  });
+
+  it("normalizes career category labels in approval payloads", () => {
+    const payload = approvalPayloadSchema.parse({
+      proposal: {
+        summary: "Created an internship preparation plan.",
+        category: "Career",
+        lifeEvent: {
+          title: "Internship preparation",
+          description: "Prepare a stronger internship application profile.",
+          category: "Career",
+          startDate: "2026-08-25",
+          endDate: "2026-12-31",
+        },
+        tasks: [
+          {
+            title: "Create job-ready profile",
+            description: "Update resume, LinkedIn, and interview stories.",
+            priority: "high",
+            dueDate: "2026-08-31",
+          },
+        ],
+        reminders: [],
+        waitingItems: [],
+        clarificationQuestions: [],
+      },
+    });
+
+    expect(payload.proposal.category).toBe("career");
+    expect(payload.proposal.lifeEvent.category).toBe("career");
   });
 
   it("clears generated tasks and removes reminder task links", () => {
