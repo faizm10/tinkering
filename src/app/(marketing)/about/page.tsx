@@ -31,15 +31,15 @@ export default function AboutPage() {
         <p>
           It is not a chatbot, and it is not another blank to-do list. There is no conversation to
           maintain and nothing to set up before it is useful. It also does not act for you: it will
-          not email anyone, buy anything, cancel a service or delete a record.
+          not contact third parties, buy anything, cancel a service or delete a record.
         </p>
       </ProseSection>
 
       <ProseSection heading="Where it is">
         <p>
-          Sonae is early. The agent, the approval flow, deadline tracking and the waiting-on
-          record all work today. External integrations, notifications and shared household events
-          are not built yet.
+          Sonae is early. The agent, the approval flow, deadline tracking, reminder notifications
+          and the waiting-on record all work today. External integrations and shared household
+          events are not built yet.
         </p>
         <p>
           <Link

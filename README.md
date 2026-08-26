@@ -66,6 +66,14 @@ AGENT_MAX_STEPS=12
 AGENT_TIMEOUT_MS=20000
 AGENT_CLARIFICATION_TTL_HOURS=168
 CRON_SECRET=
+
+# Optional reminder delivery
+APP_BASE_URL=
+QSTASH_TOKEN=
+QSTASH_CURRENT_SIGNING_KEY=
+QSTASH_NEXT_SIGNING_KEY=
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=
 ```
 
 Production mode fails clearly unless real providers are configured:
@@ -73,6 +81,35 @@ Production mode fails clearly unless real providers are configured:
 - Neon/Postgres: `DATA_PROVIDER=postgres`, `DATABASE_URL`
 - Better Auth: `AUTH_PROVIDER=better-auth`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
 - OpenAI: `AI_PROVIDER=openai`, `OPENAI_API_KEY`, `OPENAI_MODEL`
+
+Reminder delivery is optional in local/demo mode. Without keys, reminders are still created and marked as pending delivery. After keys are added, the reminder cron can queue pending reminders.
+
+## Reminder Delivery
+
+Sonae uses QStash for precise delayed jobs and Resend for email. This is a good side-project setup because QStash handles durable scheduling and retries without running a separate worker process, while Resend keeps email sending simple and cheap at low volume.
+
+Flow:
+
+1. A user creates a reminder or approves an agent proposal with reminders.
+2. Sonae stores the reminder, resolves the notification email, and queues a QStash message for the exact `remindAt` timestamp.
+3. QStash calls `POST /api/reminders/deliver` when the reminder is due.
+4. The worker verifies the request, checks `deliveryVersion` for stale edits, sends email with Resend, and marks the reminder `sent`.
+5. `GET /api/cron/reminders` runs daily as a fallback. It queues pending future reminders within QStash's one-year scheduling window and directly attempts due reminders that were missed.
+
+Required env vars for live email reminders:
+
+- `APP_BASE_URL`: deployed app URL, for example `https://sonae.example.com`
+- `QSTASH_TOKEN`: Upstash QStash token
+- `QSTASH_CURRENT_SIGNING_KEY` and `QSTASH_NEXT_SIGNING_KEY`: QStash webhook verification keys
+- `RESEND_API_KEY`: Resend API key
+- `RESEND_FROM_EMAIL`: verified sender, for example `Sonae <reminders@yourdomain.com>`
+- `CRON_SECRET`: shared bearer secret for Vercel Cron and the fallback worker auth path
+
+Run the migration before enabling Postgres-backed reminder delivery:
+
+```bash
+npm run db:migrate
+```
 
 ## Approval Boundary
 

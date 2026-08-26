@@ -21,6 +21,7 @@ export const lifeEventStatus = pgEnum("life_event_status", ["draft", "active", "
 export const taskStatus = pgEnum("task_status", ["pending", "in_progress", "completed", "cancelled"]);
 export const taskPriority = pgEnum("task_priority", ["low", "medium", "high"]);
 export const reminderStatus = pgEnum("reminder_status", ["scheduled", "sent", "dismissed", "cancelled"]);
+export const reminderDeliveryStatus = pgEnum("reminder_delivery_status", ["pending", "scheduled", "sending", "sent", "failed", "skipped", "cancelled"]);
 export const waitingItemStatus = pgEnum("waiting_item_status", ["waiting", "follow_up_due", "resolved", "cancelled"]);
 export const proposalStatus = pgEnum("proposal_status", ["pending", "approved", "rejected", "expired"]);
 export const agentRunStatus = pgEnum("agent_run_status", [
@@ -44,6 +45,7 @@ export const profiles = pgTable(
     name: text("name").notNull(),
     timezone: text("timezone").notNull(),
     reminderPreference: text("reminder_preference").notNull().default("morning"),
+    notificationEmail: text("notification_email"),
     onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
     ...timestamps,
   },
@@ -107,12 +109,24 @@ export const reminders = pgTable(
     title: text("title").notNull(),
     remindAt: timestamp("remind_at", { withTimezone: true }).notNull(),
     status: reminderStatus("status").notNull().default("scheduled"),
+    deliveryChannel: text("delivery_channel").notNull().default("email"),
+    deliveryStatus: reminderDeliveryStatus("delivery_status").notNull().default("pending"),
+    deliveryVersion: integer("delivery_version").notNull().default(1),
+    deliveryRecipientEmail: text("delivery_recipient_email"),
+    qstashMessageId: text("qstash_message_id"),
+    scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }),
+    failureCount: integer("failure_count").notNull().default(0),
+    lastError: text("last_error"),
     ...timestamps,
   },
   (table) => ({
     userIdx: index("reminders_user_id_idx").on(table.userId),
     remindAtIdx: index("reminders_remind_at_idx").on(table.remindAt),
     statusIdx: index("reminders_status_idx").on(table.status),
+    deliveryStatusIdx: index("reminders_delivery_status_idx").on(table.deliveryStatus),
+    dueDeliveryIdx: index("reminders_due_delivery_idx").on(table.status, table.deliveryStatus, table.remindAt),
   }),
 );
 

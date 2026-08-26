@@ -37,6 +37,7 @@ function createInitialStore(): Store {
     name: "Faiz",
     timezone: "America/Toronto",
     reminderPreference: "Morning digest",
+    notificationEmail: null,
   },
   events: [
     {
@@ -160,6 +161,21 @@ globalThis.__lifeAdminDemoStore = store;
 
 function id(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function reminderDeliveryDefaults() {
+  return {
+    deliveryChannel: "email" as const,
+    deliveryStatus: "pending" as const,
+    deliveryVersion: 1,
+    deliveryRecipientEmail: null,
+    qstashMessageId: null,
+    scheduledAt: null,
+    sentAt: null,
+    lastAttemptAt: null,
+    failureCount: 0,
+    lastError: null,
+  };
 }
 
 /** Earliest due date first; undated tasks sink to the bottom of the list. */
@@ -352,6 +368,7 @@ export function approveDemoProposal(proposalId: string, editedProposal: AgentPro
       title: reminder.title,
       remindAt: reminder.remindAt,
       status: "scheduled",
+      ...reminderDeliveryDefaults(),
     });
   });
 

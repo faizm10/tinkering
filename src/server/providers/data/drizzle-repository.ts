@@ -1,7 +1,7 @@
 import "server-only";
 
 import { addDays } from "date-fns";
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, lte, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -19,6 +19,7 @@ import { todayISO } from "@/lib/dates";
 import type {
   CreateLifeEventInput,
   CreateReminderInput,
+  ReminderDeliveryPatch,
   CreateTaskInput,
   CreateWaitingItemInput,
   DataRepository,
@@ -86,6 +87,16 @@ function toReminder(row: typeof reminders.$inferSelect): ReminderRecord {
     title: row.title,
     remindAt: serializeDate(row.remindAt) ?? new Date().toISOString(),
     status: row.status,
+    deliveryChannel: "email",
+    deliveryStatus: row.deliveryStatus,
+    deliveryVersion: row.deliveryVersion,
+    deliveryRecipientEmail: row.deliveryRecipientEmail,
+    qstashMessageId: row.qstashMessageId,
+    scheduledAt: serializeDate(row.scheduledAt),
+    sentAt: serializeDate(row.sentAt),
+    lastAttemptAt: serializeDate(row.lastAttemptAt),
+    failureCount: row.failureCount,
+    lastError: row.lastError,
   };
 }
 
@@ -221,6 +232,7 @@ export class DrizzleDataRepository implements DataRepository {
       name: profile?.name ?? "Sonae User",
       timezone: profile?.timezone ?? "America/Toronto",
       reminderPreference: profile?.reminderPreference ?? "Morning digest",
+      notificationEmail: profile?.notificationEmail ?? null,
     };
   }
 
@@ -233,6 +245,7 @@ export class DrizzleDataRepository implements DataRepository {
           name: profile.name,
           timezone: profile.timezone,
           reminderPreference: profile.reminderPreference,
+          notificationEmail: profile.notificationEmail,
           onboardingCompleted: true,
           updatedAt: new Date(),
         })
@@ -243,6 +256,7 @@ export class DrizzleDataRepository implements DataRepository {
         name: profile.name,
         timezone: profile.timezone,
         reminderPreference: profile.reminderPreference,
+        notificationEmail: profile.notificationEmail,
         onboardingCompleted: true,
       });
     }
@@ -488,6 +502,15 @@ export class DrizzleDataRepository implements DataRepository {
     const values = {
       ...rest,
       ...(remindAt ? { remindAt: new Date(remindAt) } : {}),
+      status: "scheduled" as const,
+      deliveryStatus: "pending" as const,
+      deliveryVersion: sql`${reminders.deliveryVersion} + 1`,
+      qstashMessageId: null,
+      scheduledAt: null,
+      sentAt: null,
+      lastAttemptAt: null,
+      failureCount: 0,
+      lastError: null,
       updatedAt: new Date(),
     };
     const [reminder] = await db
@@ -503,6 +526,55 @@ export class DrizzleDataRepository implements DataRepository {
     const reminder = await requireReminder(db, userId, reminderId);
     await db.delete(reminders).where(and(eq(reminders.id, reminderId), eq(reminders.userId, userId)));
     await log(db, userId, "user", "archived", "reminder", reminder.id, `Deleted "${reminder.title}".`);
+  }
+
+  async getReminder(userId: string, reminderId: string) {
+    const [reminder] = await db
+      .select()
+      .from(reminders)
+      .where(and(eq(reminders.id, reminderId), eq(reminders.userId, userId)))
+      .limit(1);
+    return reminder ? toReminder(reminder) : null;
+  }
+
+  async listRemindersForEvent(userId: string, eventId: string) {
+    const rows = await db
+      .select()
+      .from(reminders)
+      .where(and(eq(reminders.userId, userId), eq(reminders.lifeEventId, eventId)))
+      .orderBy(asc(reminders.remindAt));
+    return rows.map(toReminder);
+  }
+
+  async listDueReminders(nowIso: string, limit: number) {
+    const rows = await db
+      .select()
+      .from(reminders)
+      .where(and(eq(reminders.status, "scheduled"), inArray(reminders.deliveryStatus, ["pending", "scheduled", "failed"]), lte(reminders.remindAt, new Date(nowIso))))
+      .orderBy(asc(reminders.remindAt))
+      .limit(limit);
+    return rows.map(toReminder);
+  }
+
+  async updateReminderDelivery(userId: string, reminderId: string, input: ReminderDeliveryPatch) {
+    const values = {
+      ...(input.deliveryStatus ? { deliveryStatus: input.deliveryStatus } : {}),
+      ...("deliveryRecipientEmail" in input ? { deliveryRecipientEmail: input.deliveryRecipientEmail } : {}),
+      ...("qstashMessageId" in input ? { qstashMessageId: input.qstashMessageId } : {}),
+      ...("scheduledAt" in input ? { scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null } : {}),
+      ...("sentAt" in input ? { sentAt: input.sentAt ? new Date(input.sentAt) : null } : {}),
+      ...("lastAttemptAt" in input ? { lastAttemptAt: input.lastAttemptAt ? new Date(input.lastAttemptAt) : null } : {}),
+      ...("failureCount" in input ? { failureCount: input.failureCount } : {}),
+      ...("lastError" in input ? { lastError: input.lastError } : {}),
+      ...(input.status ? { status: input.status } : {}),
+      updatedAt: new Date(),
+    };
+    const [reminder] = await db
+      .update(reminders)
+      .set(values)
+      .where(and(eq(reminders.id, reminderId), eq(reminders.userId, userId)))
+      .returning();
+    return reminder ? toReminder(reminder) : null;
   }
 
   async listProposals(userId: string) {

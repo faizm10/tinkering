@@ -12,6 +12,7 @@ describe("provider-backed vertical slice", () => {
       name: "Test User",
       timezone: "America/Toronto",
       reminderPreference: "Morning digest",
+      notificationEmail: null,
     });
 
     const result = await agent.createProposal("I’m moving on September 1.");

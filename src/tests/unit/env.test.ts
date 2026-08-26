@@ -47,4 +47,16 @@ describe("environment provider modes", () => {
     expect(env.DATA_PROVIDER).toBe("postgres");
     expect(env.AUTH_PROVIDER).toBe("better-auth");
   });
+
+  it("does not require reminder delivery credentials for local runs", () => {
+    const env = parseServerEnv({
+      APP_BASE_URL: "https://sonae.example.com",
+      QSTASH_TOKEN: "",
+      RESEND_API_KEY: "",
+      RESEND_FROM_EMAIL: "",
+    });
+
+    expect(env.APP_BASE_URL).toBe("https://sonae.example.com");
+    expect(env.QSTASH_TOKEN).toBe("");
+  });
 });

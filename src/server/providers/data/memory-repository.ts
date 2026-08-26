@@ -7,6 +7,7 @@ import { DEMO_USER_ID } from "@/server/providers/auth/demo-auth";
 import type {
   CreateLifeEventInput,
   CreateReminderInput,
+  ReminderDeliveryPatch,
   CreateTaskInput,
   CreateWaitingItemInput,
   DataRepository,
@@ -46,6 +47,21 @@ function id(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function reminderDeliveryDefaults() {
+  return {
+    deliveryChannel: "email" as const,
+    deliveryStatus: "pending" as const,
+    deliveryVersion: 1,
+    deliveryRecipientEmail: null,
+    qstashMessageId: null,
+    scheduledAt: null,
+    sentAt: null,
+    lastAttemptAt: null,
+    failureCount: 0,
+    lastError: null,
+  };
+}
+
 function createInitialStore(): Store {
   return {
     profiles: {
@@ -53,6 +69,7 @@ function createInitialStore(): Store {
         name: "Demo User",
         timezone: "America/Toronto",
         reminderPreference: "Morning digest",
+        notificationEmail: null,
       },
     },
     events: [
@@ -237,6 +254,7 @@ export class MemoryDataRepository implements DataRepository {
       name: "Demo User",
       timezone: "America/Toronto",
       reminderPreference: "Morning digest",
+      notificationEmail: null,
     };
   }
 
@@ -396,7 +414,7 @@ export class MemoryDataRepository implements DataRepository {
   async createReminder(userId: string, input: CreateReminderInput) {
     if (input.lifeEventId) assertOwns(store.events.find((event) => event.id === input.lifeEventId), userId, "Life event");
     if (input.taskId) assertOwns(store.tasks.find((task) => task.id === input.taskId), userId, "Task");
-    const reminder: ReminderRecord = { id: id("reminder"), userId, status: "scheduled", ...input };
+    const reminder: ReminderRecord = { id: id("reminder"), userId, status: "scheduled", ...reminderDeliveryDefaults(), ...input };
     store.reminders.unshift(reminder);
     log(userId, "user", "created", "reminder", reminder.id, `Created reminder “${reminder.title}”.`);
     return reminder;
@@ -407,6 +425,15 @@ export class MemoryDataRepository implements DataRepository {
     if (input.lifeEventId) assertOwns(store.events.find((event) => event.id === input.lifeEventId), userId, "Life event");
     if (input.taskId) assertOwns(store.tasks.find((task) => task.id === input.taskId), userId, "Task");
     Object.assign(reminder, input);
+    reminder.status = "scheduled";
+    reminder.deliveryStatus = "pending";
+    reminder.deliveryVersion += 1;
+    reminder.qstashMessageId = null;
+    reminder.scheduledAt = null;
+    reminder.sentAt = null;
+    reminder.lastAttemptAt = null;
+    reminder.failureCount = 0;
+    reminder.lastError = null;
     log(userId, "user", "updated", "reminder", reminder.id, `Updated “${reminder.title}”.`);
     return reminder;
   }
@@ -415,6 +442,35 @@ export class MemoryDataRepository implements DataRepository {
     const reminder = assertOwns(store.reminders.find((entry) => entry.id === reminderId), userId, "Reminder");
     store.reminders = store.reminders.filter((entry) => !(entry.id === reminderId && entry.userId === userId));
     log(userId, "user", "archived", "reminder", reminder.id, `Deleted “${reminder.title}”.`);
+  }
+
+  async getReminder(userId: string, reminderId: string) {
+    const reminder = store.reminders.find((entry) => entry.id === reminderId && entry.userId === userId);
+    return reminder ?? null;
+  }
+
+  async listRemindersForEvent(userId: string, eventId: string) {
+    return store.reminders
+      .filter((reminder) => reminder.userId === userId && reminder.lifeEventId === eventId)
+      .sort((a, b) => a.remindAt.localeCompare(b.remindAt));
+  }
+
+  async listDueReminders(nowIso: string, limit: number) {
+    return store.reminders
+      .filter((reminder) =>
+        reminder.status === "scheduled" &&
+        ["pending", "scheduled", "failed"].includes(reminder.deliveryStatus) &&
+        reminder.remindAt <= nowIso,
+      )
+      .sort((a, b) => a.remindAt.localeCompare(b.remindAt))
+      .slice(0, limit);
+  }
+
+  async updateReminderDelivery(userId: string, reminderId: string, input: ReminderDeliveryPatch) {
+    const reminder = store.reminders.find((entry) => entry.id === reminderId && entry.userId === userId);
+    if (!reminder) return null;
+    Object.assign(reminder, input);
+    return reminder;
   }
 
   async listProposals(userId: string) {
@@ -504,6 +560,7 @@ export class MemoryDataRepository implements DataRepository {
         title: reminder.title,
         remindAt: reminder.remindAt,
         status: "scheduled",
+        ...reminderDeliveryDefaults(),
       };
       store.reminders.unshift(reminderRecord);
       log(userId, "agent", "created", "reminder", reminderRecord.id, `Created reminder “${reminder.title}”.`);
