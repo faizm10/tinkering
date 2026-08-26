@@ -8,6 +8,13 @@
       "when": 1786302489294,
       "tag": "0000_sonae_app_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787698982627,
+      "tag": "0001_loving_shatterstar",
+      "breakpoints": true
     }
   ]
 }

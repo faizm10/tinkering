@@ -48,6 +48,16 @@ export type ReminderRecord = {
   title: string;
   remindAt: string;
   status: "scheduled" | "sent" | "dismissed" | "cancelled";
+  deliveryChannel: "email";
+  deliveryStatus: "pending" | "scheduled" | "sending" | "sent" | "failed" | "skipped" | "cancelled";
+  deliveryVersion: number;
+  deliveryRecipientEmail: string | null;
+  qstashMessageId: string | null;
+  scheduledAt: string | null;
+  sentAt: string | null;
+  lastAttemptAt: string | null;
+  failureCount: number;
+  lastError: string | null;
 };
 
 export type ProposalRecord = {
@@ -114,6 +124,7 @@ export type DashboardData = {
     name: string;
     timezone: string;
     reminderPreference: string;
+    notificationEmail: string | null;
   };
   today: TaskRecord[];
   upcoming: TaskRecord[];

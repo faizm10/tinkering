@@ -43,6 +43,18 @@ export type CreateReminderInput = {
   remindAt: string;
 };
 
+export type ReminderDeliveryPatch = {
+  deliveryStatus?: ReminderRecord["deliveryStatus"];
+  deliveryRecipientEmail?: string | null;
+  qstashMessageId?: string | null;
+  scheduledAt?: string | null;
+  sentAt?: string | null;
+  lastAttemptAt?: string | null;
+  failureCount?: number;
+  lastError?: string | null;
+  status?: ReminderRecord["status"];
+};
+
 export interface DataRepository {
   getDashboardData(userId: string): Promise<DashboardData>;
   getProfile(userId: string): Promise<DashboardData["profile"]>;
@@ -66,6 +78,10 @@ export interface DataRepository {
   createReminder(userId: string, input: CreateReminderInput): Promise<ReminderRecord>;
   updateReminder(userId: string, reminderId: string, input: Partial<CreateReminderInput>): Promise<ReminderRecord>;
   deleteReminder(userId: string, reminderId: string): Promise<void>;
+  getReminder(userId: string, reminderId: string): Promise<ReminderRecord | null>;
+  listRemindersForEvent(userId: string, eventId: string): Promise<ReminderRecord[]>;
+  listDueReminders(nowIso: string, limit: number): Promise<ReminderRecord[]>;
+  updateReminderDelivery(userId: string, reminderId: string, input: ReminderDeliveryPatch): Promise<ReminderRecord | null>;
   listProposals(userId: string): Promise<ProposalRecord[]>;
   getProposal(userId: string, proposalId: string): Promise<ProposalRecord | null>;
   createProposal(

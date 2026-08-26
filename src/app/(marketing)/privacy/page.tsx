@@ -38,9 +38,10 @@ export default function PrivacyPage() {
 
       <ProseSection heading="What Sonae will not do">
         <p>
-          It does not send email on your behalf, make purchases, cancel services, or share your
-          plans with anyone else. There is no shared or household workspace today — every workspace
-          has exactly one user.
+          It does not contact third parties, make purchases, cancel services, or share your plans
+          with anyone else. Reminder emails only go to the notification address you configure or
+          your account email. There is no shared or household workspace today — every workspace has
+          exactly one user.
         </p>
       </ProseSection>
 

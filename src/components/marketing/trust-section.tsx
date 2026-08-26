@@ -18,7 +18,7 @@ const guarantees = [
   },
   {
     title: "External actions require your confirmation",
-    body: "Sonae does not send email, make purchases, cancel services or delete anything on your behalf.",
+    body: "Sonae does not contact third parties, make purchases, cancel services or delete anything on your behalf.",
   },
   {
     title: "Activity history shows what changed",

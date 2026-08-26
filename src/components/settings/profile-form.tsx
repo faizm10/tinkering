@@ -48,6 +48,15 @@ export function ProfileForm({
             maxLength={60}
           />
         </Field>
+        <Field label="Notification email" htmlFor="profile-notification-email" hint="Leave blank to use your account email.">
+          <Input
+            id="profile-notification-email"
+            name="notificationEmail"
+            type="email"
+            defaultValue={profile.notificationEmail ?? ""}
+            maxLength={160}
+          />
+        </Field>
         <Field label="Reminders" htmlFor="profile-reminder" className="sm:col-span-2">
           <Select
             id="profile-reminder"

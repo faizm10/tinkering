@@ -371,7 +371,7 @@ export async function runTool(name: string, rawArgs: unknown, draft: ProposalDra
   draft.reminders.forEach((reminder) => builder.addReminder(reminder));
   draft.waitingItems.forEach((item) => builder.addWaitingItem(item));
   const fakeRepository = {
-    async getProfile() { return { name: "Demo User", timezone: "America/Toronto", reminderPreference: "Morning digest" }; },
+    async getProfile() { return { name: "Demo User", timezone: "America/Toronto", reminderPreference: "Morning digest", notificationEmail: null }; },
     async listLifeEvents() { return []; },
     async listTasks() { return []; },
     async listWaitingItems() { return []; },
