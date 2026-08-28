@@ -9,6 +9,7 @@ describe("environment provider modes", () => {
     expect(env.DATA_PROVIDER).toBe("memory");
     expect(env.AI_PROVIDER).toBe("mock");
     expect(env.AUTH_PROVIDER).toBe("demo");
+    expect(env.AI_GATEWAY_MODEL).toBe("openai/gpt-5.6-luna");
   });
 
   it("rejects production demo providers", () => {
@@ -58,5 +59,15 @@ describe("environment provider modes", () => {
 
     expect(env.APP_BASE_URL).toBe("https://sonae.example.com");
     expect(env.QSTASH_TOKEN).toBe("");
+  });
+
+  it("accepts optional AI Gateway chat configuration", () => {
+    const env = parseServerEnv({
+      AI_GATEWAY_API_KEY: "gateway-key",
+      AI_GATEWAY_MODEL: "openai/gpt-5.6-sol",
+    });
+
+    expect(env.AI_GATEWAY_API_KEY).toBe("gateway-key");
+    expect(env.AI_GATEWAY_MODEL).toBe("openai/gpt-5.6-sol");
   });
 });

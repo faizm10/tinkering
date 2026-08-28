@@ -103,6 +103,27 @@ export type AgentRunRecord = {
   completedAt: string | null;
 };
 
+export type AgentConversationRecord = {
+  id: string;
+  userId?: string;
+  title: string;
+  status: "active" | "archived";
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AgentMessageRole = "user" | "assistant";
+
+export type AgentMessageRecord = {
+  id: string;
+  conversationId: string;
+  userId?: string;
+  role: AgentMessageRole;
+  partsJson: Array<Record<string, unknown>>;
+  metadataJson: Record<string, unknown>;
+  createdAt: string;
+};
+
 /** A life event plus everything attached to it, for the detail screen. */
 export type LifeEventDetail = LifeEventRecord & {
   tasks: TaskRecord[];

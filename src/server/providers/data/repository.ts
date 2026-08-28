@@ -1,5 +1,8 @@
 import type { AgentProposal } from "@/lib/validations/proposal";
 import type {
+  AgentConversationRecord,
+  AgentMessageRecord,
+  AgentMessageRole,
   AgentRunRecord,
   DashboardData,
   LifeEventDetail,
@@ -55,6 +58,13 @@ export type ReminderDeliveryPatch = {
   status?: ReminderRecord["status"];
 };
 
+export type AppendAgentMessageInput = {
+  conversationId: string;
+  role: AgentMessageRole;
+  partsJson: Array<Record<string, unknown>>;
+  metadataJson?: Record<string, unknown>;
+};
+
 export interface DataRepository {
   getDashboardData(userId: string): Promise<DashboardData>;
   getProfile(userId: string): Promise<DashboardData["profile"]>;
@@ -96,4 +106,9 @@ export interface DataRepository {
   approveProposal(userId: string, proposalId: string, editedProposal: AgentProposal): Promise<string>;
   rejectProposal(userId: string, proposalId: string): Promise<void>;
   recordAgentRun(userId: string, run: Omit<AgentRunRecord, "id" | "userId" | "startedAt">): Promise<AgentRunRecord>;
+  listAgentConversations(userId: string): Promise<AgentConversationRecord[]>;
+  getAgentConversation(userId: string, conversationId: string): Promise<AgentConversationRecord | null>;
+  createAgentConversation(userId: string, title?: string): Promise<AgentConversationRecord>;
+  listAgentMessages(userId: string, conversationId: string): Promise<AgentMessageRecord[]>;
+  appendAgentMessage(userId: string, input: AppendAgentMessageInput): Promise<AgentMessageRecord>;
 }

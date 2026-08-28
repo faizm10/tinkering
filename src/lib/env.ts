@@ -16,6 +16,8 @@ const envSchema = z.object({
   NEON_AUTH_COOKIE_SECRET: z.string().min(32).optional().or(z.literal("")),
   OPENAI_API_KEY: z.string().optional().or(z.literal("")),
   OPENAI_MODEL: z.string().default("gpt-5-mini"),
+  AI_GATEWAY_API_KEY: z.string().optional().or(z.literal("")),
+  AI_GATEWAY_MODEL: z.string().default("openai/gpt-5.6-luna"),
   AGENT_MAX_STEPS: z.coerce.number().int().min(1).max(30).default(12),
   AGENT_TIMEOUT_MS: z.coerce.number().int().min(1_000).max(60_000).default(20_000),
   AGENT_CLARIFICATION_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(168),
@@ -101,6 +103,8 @@ export const env = parseServerEnv({
   NEON_AUTH_COOKIE_SECRET: process.env.NEON_AUTH_COOKIE_SECRET,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   OPENAI_MODEL: process.env.OPENAI_MODEL,
+  AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
+  AI_GATEWAY_MODEL: process.env.AI_GATEWAY_MODEL,
   AGENT_MAX_STEPS: process.env.AGENT_MAX_STEPS,
   AGENT_TIMEOUT_MS: process.env.AGENT_TIMEOUT_MS,
   AGENT_CLARIFICATION_TTL_HOURS: process.env.AGENT_CLARIFICATION_TTL_HOURS,
@@ -120,6 +124,10 @@ export function hasDatabase() {
 
 export function hasOpenAI() {
   return env.AI_PROVIDER === "openai";
+}
+
+export function hasAIGateway() {
+  return Boolean(env.AI_GATEWAY_API_KEY);
 }
 
 export function hasReminderDelivery() {
