@@ -6,6 +6,8 @@ import { and, asc, desc, eq, inArray, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   activityLogs,
+  agentConversations,
+  agentMessages,
   agentProposals,
   agentRuns,
   lifeEvents,
@@ -17,6 +19,7 @@ import {
 import { agentProposalSchema, type AgentProposal } from "@/lib/validations/proposal";
 import { todayISO } from "@/lib/dates";
 import type {
+  AppendAgentMessageInput,
   CreateLifeEventInput,
   CreateReminderInput,
   ReminderDeliveryPatch,
@@ -25,6 +28,8 @@ import type {
   DataRepository,
 } from "@/server/providers/data/repository";
 import type {
+  AgentConversationRecord,
+  AgentMessageRecord,
   ActivityRecord,
   AgentRunRecord,
   DashboardData,
@@ -145,6 +150,29 @@ function toProposal(row: typeof agentProposals.$inferSelect): ProposalRecord {
       typeof row.conversationContextJson.clarificationQuestion === "string"
         ? row.conversationContextJson.clarificationQuestion
         : undefined,
+  };
+}
+
+function toConversation(row: typeof agentConversations.$inferSelect): AgentConversationRecord {
+  return {
+    id: row.id,
+    userId: row.userId,
+    title: row.title,
+    status: row.status,
+    createdAt: serializeDate(row.createdAt) ?? new Date().toISOString(),
+    updatedAt: serializeDate(row.updatedAt) ?? new Date().toISOString(),
+  };
+}
+
+function toAgentMessage(row: typeof agentMessages.$inferSelect): AgentMessageRecord {
+  return {
+    id: row.id,
+    conversationId: row.conversationId,
+    userId: row.userId,
+    role: row.role,
+    partsJson: row.partsJson,
+    metadataJson: row.metadataJson,
+    createdAt: serializeDate(row.createdAt) ?? new Date().toISOString(),
   };
 }
 
@@ -743,16 +771,16 @@ export class DrizzleDataRepository implements DataRepository {
         userId,
         proposalId: run.proposalId,
         input: run.input,
-      provider: run.provider,
-      model: run.model,
-      promptVersion: run.promptVersion ?? "sonae-v1",
-      status: run.status,
-      stepCount: run.stepCount,
-      toolCallsJson: run.toolCallsJson,
-      progressEventsJson: run.progressEventsJson ?? [],
-      usageJson: run.usageJson ?? null,
-      errorCategory: run.errorCategory ?? null,
-      errorMessage: run.errorMessage,
+        provider: run.provider,
+        model: run.model,
+        promptVersion: run.promptVersion ?? "sonae-v1",
+        status: run.status,
+        stepCount: run.stepCount,
+        toolCallsJson: run.toolCallsJson,
+        progressEventsJson: run.progressEventsJson ?? [],
+        usageJson: run.usageJson ?? null,
+        errorCategory: run.errorCategory ?? null,
+        errorMessage: run.errorMessage,
         completedAt: run.completedAt ? new Date(run.completedAt) : null,
       })
       .returning();
@@ -774,5 +802,67 @@ export class DrizzleDataRepository implements DataRepository {
       startedAt: serializeDate(record.startedAt) ?? new Date().toISOString(),
       completedAt: serializeDate(record.completedAt),
     };
+  }
+
+  async listAgentConversations(userId: string) {
+    const rows = await db
+      .select()
+      .from(agentConversations)
+      .where(eq(agentConversations.userId, userId))
+      .orderBy(desc(agentConversations.updatedAt))
+      .limit(20);
+    return rows.map(toConversation);
+  }
+
+  async getAgentConversation(userId: string, conversationId: string) {
+    const [conversation] = await db
+      .select()
+      .from(agentConversations)
+      .where(and(eq(agentConversations.id, conversationId), eq(agentConversations.userId, userId)))
+      .limit(1);
+    return conversation ? toConversation(conversation) : null;
+  }
+
+  async createAgentConversation(userId: string, title = "Ask Sonae") {
+    const [conversation] = await db
+      .insert(agentConversations)
+      .values({ userId, title })
+      .returning();
+    return toConversation(conversation);
+  }
+
+  async listAgentMessages(userId: string, conversationId: string) {
+    const conversation = await this.getAgentConversation(userId, conversationId);
+    if (!conversation) return [];
+
+    const rows = await db
+      .select()
+      .from(agentMessages)
+      .where(and(eq(agentMessages.conversationId, conversationId), eq(agentMessages.userId, userId)))
+      .orderBy(asc(agentMessages.createdAt));
+    return rows.map(toAgentMessage);
+  }
+
+  async appendAgentMessage(userId: string, input: AppendAgentMessageInput) {
+    const conversation = await this.getAgentConversation(userId, input.conversationId);
+    if (!conversation) throw new Error("Conversation not found.");
+
+    const [message] = await db
+      .insert(agentMessages)
+      .values({
+        conversationId: input.conversationId,
+        userId,
+        role: input.role,
+        partsJson: input.partsJson,
+        metadataJson: input.metadataJson ?? {},
+      })
+      .returning();
+
+    await db
+      .update(agentConversations)
+      .set({ updatedAt: new Date() })
+      .where(and(eq(agentConversations.id, input.conversationId), eq(agentConversations.userId, userId)));
+
+    return toAgentMessage(message);
   }
 }

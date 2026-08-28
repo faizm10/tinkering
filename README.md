@@ -13,6 +13,8 @@ The app uses one focused server-side agent:
 - `ProposalBuilder`: maintains temporary proposal state and prevents duplicate finalization.
 - `DataRepository`: `MemoryDataRepository` for demo/test, `DrizzleDataRepository` for Neon/PostgreSQL.
 - `AuthProvider`: `DemoAuthProvider` for demo, `BetterAuthProvider` for production auth.
+- `Assistant chat`: a persisted `/assistant` workspace backed by `agent_conversations`
+  and `agent_messages`, streamed with AI SDK UI-message chunks.
 
 Application services depend on provider interfaces selected in `src/server/providers/index.ts`.
 
@@ -114,6 +116,14 @@ npm run db:migrate
 ## Approval Boundary
 
 The agent only creates pending proposals. Approval validates the user-edited proposal again, verifies ownership/state, prevents duplicate approval, and creates the life event, tasks, reminders, waiting items, and activity logs in one repository operation. Clarification-pending proposals cannot be approved.
+
+## Assistant Chat
+
+The assistant page is available at `/assistant`. It loads the user’s current
+Sonae context, persists each message, and renders assistant replies as text plus
+a planning ledger. When the user asks Sonae to plan a situation, chat creates a
+pending proposal and returns a review card; nothing is permanently saved until
+the normal approval flow accepts that proposal.
 
 ## Commands
 

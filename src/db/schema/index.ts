@@ -24,6 +24,8 @@ export const reminderStatus = pgEnum("reminder_status", ["scheduled", "sent", "d
 export const reminderDeliveryStatus = pgEnum("reminder_delivery_status", ["pending", "scheduled", "sending", "sent", "failed", "skipped", "cancelled"]);
 export const waitingItemStatus = pgEnum("waiting_item_status", ["waiting", "follow_up_due", "resolved", "cancelled"]);
 export const proposalStatus = pgEnum("proposal_status", ["pending", "approved", "rejected", "expired"]);
+export const agentConversationStatus = pgEnum("agent_conversation_status", ["active", "archived"]);
+export const agentMessageRole = pgEnum("agent_message_role", ["user", "assistant"]);
 export const agentRunStatus = pgEnum("agent_run_status", [
   "created",
   "running",
@@ -198,6 +200,38 @@ export const agentRuns = pgTable(
   }),
 );
 
+export const agentConversations = pgTable(
+  "agent_conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id").notNull(),
+    title: text("title").notNull().default("Ask Sonae"),
+    status: agentConversationStatus("status").notNull().default("active"),
+    ...timestamps,
+  },
+  (table) => ({
+    userIdx: index("agent_conversations_user_id_idx").on(table.userId),
+    userUpdatedIdx: index("agent_conversations_user_updated_idx").on(table.userId, table.updatedAt),
+  }),
+);
+
+export const agentMessages = pgTable(
+  "agent_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id").notNull().references(() => agentConversations.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
+    role: agentMessageRole("role").notNull(),
+    partsJson: jsonb("parts_json").$type<Array<Record<string, unknown>>>().notNull().default([]),
+    metadataJson: jsonb("metadata_json").$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    conversationIdx: index("agent_messages_conversation_id_idx").on(table.conversationId),
+    userCreatedIdx: index("agent_messages_user_created_idx").on(table.userId, table.createdAt),
+  }),
+);
+
 export const activityLogs = pgTable(
   "activity_logs",
   {
@@ -230,4 +264,15 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
 
 export const waitingItemsRelations = relations(waitingItems, ({ one }) => ({
   lifeEvent: one(lifeEvents, { fields: [waitingItems.lifeEventId], references: [lifeEvents.id] }),
+}));
+
+export const agentConversationsRelations = relations(agentConversations, ({ many }) => ({
+  messages: many(agentMessages),
+}));
+
+export const agentMessagesRelations = relations(agentMessages, ({ one }) => ({
+  conversation: one(agentConversations, {
+    fields: [agentMessages.conversationId],
+    references: [agentConversations.id],
+  }),
 }));

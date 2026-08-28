@@ -5,6 +5,7 @@ import { agentProposalSchema, type AgentProposal } from "@/lib/validations/propo
 import { todayISO } from "@/lib/dates";
 import { DEMO_USER_ID } from "@/server/providers/auth/demo-auth";
 import type {
+  AppendAgentMessageInput,
   CreateLifeEventInput,
   CreateReminderInput,
   ReminderDeliveryPatch,
@@ -14,6 +15,8 @@ import type {
 } from "@/server/providers/data/repository";
 import type {
   ActivityRecord,
+  AgentConversationRecord,
+  AgentMessageRecord,
   AgentRunRecord,
   DashboardData,
   LifeEventDetail,
@@ -34,6 +37,8 @@ type Store = {
   proposals: ProposalRecord[];
   activity: ActivityRecord[];
   agentRuns: AgentRunRecord[];
+  agentConversations: AgentConversationRecord[];
+  agentMessages: AgentMessageRecord[];
 };
 
 declare global {
@@ -197,6 +202,8 @@ function createInitialStore(): Store {
       },
     ],
     agentRuns: [],
+    agentConversations: [],
+    agentMessages: [],
   };
 }
 
@@ -611,5 +618,56 @@ export class MemoryDataRepository implements DataRepository {
     };
     store.agentRuns.unshift(record);
     return record;
+  }
+
+  async listAgentConversations(userId: string) {
+    return store.agentConversations
+      .filter((conversation) => conversation.userId === userId && conversation.status === "active")
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      .slice(0, 20);
+  }
+
+  async getAgentConversation(userId: string, conversationId: string) {
+    return store.agentConversations.find((conversation) => conversation.id === conversationId && conversation.userId === userId) ?? null;
+  }
+
+  async createAgentConversation(userId: string, title = "Ask Sonae") {
+    const timestamp = new Date().toISOString();
+    const conversation: AgentConversationRecord = {
+      id: id("conversation"),
+      userId,
+      title,
+      status: "active",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+    store.agentConversations.unshift(conversation);
+    return conversation;
+  }
+
+  async listAgentMessages(userId: string, conversationId: string) {
+    const conversation = await this.getAgentConversation(userId, conversationId);
+    if (!conversation) return [];
+    return store.agentMessages
+      .filter((message) => message.userId === userId && message.conversationId === conversationId)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  }
+
+  async appendAgentMessage(userId: string, input: AppendAgentMessageInput) {
+    const conversation = await this.getAgentConversation(userId, input.conversationId);
+    if (!conversation) throw new Error("Conversation not found.");
+
+    const message: AgentMessageRecord = {
+      id: id("message"),
+      conversationId: input.conversationId,
+      userId,
+      role: input.role,
+      partsJson: input.partsJson,
+      metadataJson: input.metadataJson ?? {},
+      createdAt: new Date().toISOString(),
+    };
+    store.agentMessages.push(message);
+    conversation.updatedAt = message.createdAt;
+    return message;
   }
 }
